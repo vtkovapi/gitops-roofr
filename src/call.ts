@@ -1,6 +1,8 @@
 import { existsSync, readFileSync } from "fs";
 import { join, dirname } from "path";
 import { fileURLToPath } from "url";
+import { execSync } from "child_process";
+import * as readline from "readline";
 import type { Environment, StateFile } from "./types.ts";
 import { VALID_ENVIRONMENTS } from "./types.ts";
 
@@ -11,10 +13,12 @@ import { VALID_ENVIRONMENTS } from "./types.ts";
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const BASE_DIR = join(__dirname, "..");
 
+type ResourceType = "assistant" | "squad";
+
 interface CallConfig {
   env: Environment;
   target: string;
-  isSquad: boolean;
+  resourceType: ResourceType;
   token: string;
   baseUrl: string;
 }
@@ -23,32 +27,69 @@ interface CallConfig {
 // Argument Parsing
 // ─────────────────────────────────────────────────────────────────────────────
 
+function printUsage(): void {
+  console.error("❌ Usage: bun run call:<env> -a <assistant-name>");
+  console.error("         bun run call:<env> -s <squad-name>");
+  console.error("");
+  console.error("   Options:");
+  console.error("     -a <name>    Call an assistant by name");
+  console.error("     -s <name>    Call a squad by name");
+  console.error("");
+  console.error("   Examples:");
+  console.error("     bun run call:dev -a my-assistant");
+  console.error("     bun run call:dev -a company-1/inbound-support");
+  console.error("     bun run call:prod -s my-squad");
+}
+
 function parseArgs(): CallConfig {
   const args = process.argv.slice(2);
   
-  if (args.length < 2) {
-    console.error("❌ Usage: bun run call:dev <target-name> [--squad]");
-    console.error("   Examples:");
-    console.error("     bun run call:dev my-assistant");
-    console.error("     bun run call:dev company-1/inbound-support");
-    console.error("     bun run call:dev my-squad --squad");
+  if (args.length < 3) {
+    printUsage();
     process.exit(1);
   }
 
   const env = args[0] as Environment;
-  const target = args[1];
-  const isSquad = args.includes("--squad");
-
+  
   if (!VALID_ENVIRONMENTS.includes(env)) {
     console.error(`❌ Invalid environment: ${env}`);
     console.error(`   Must be one of: ${VALID_ENVIRONMENTS.join(", ")}`);
     process.exit(1);
   }
 
+  // Parse flags
+  let resourceType: ResourceType | null = null;
+  let target: string | null = null;
+
+  for (let i = 1; i < args.length; i++) {
+    const arg = args[i];
+    if (arg === "-a" || arg === "--assistant") {
+      if (resourceType) {
+        console.error("❌ Cannot specify both -a and -s");
+        process.exit(1);
+      }
+      resourceType = "assistant";
+      target = args[++i];
+    } else if (arg === "-s" || arg === "--squad") {
+      if (resourceType) {
+        console.error("❌ Cannot specify both -a and -s");
+        process.exit(1);
+      }
+      resourceType = "squad";
+      target = args[++i];
+    }
+  }
+
+  if (!resourceType || !target) {
+    console.error("❌ Must specify either -a <assistant> or -s <squad>");
+    printUsage();
+    process.exit(1);
+  }
+
   // Load environment variables
   const { token, baseUrl } = loadEnvFile(env);
 
-  return { env, target, isSquad, token, baseUrl };
+  return { env, target, resourceType, token, baseUrl };
 }
 
 function loadEnvFile(env: string): { token: string; baseUrl: string } {
@@ -100,6 +141,95 @@ function loadEnvFile(env: string): { token: string; baseUrl: string } {
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
+// Permission Check
+// ─────────────────────────────────────────────────────────────────────────────
+
+async function checkMicrophonePermission(): Promise<boolean> {
+  const platform = process.platform;
+
+  if (platform === "darwin") {
+    // macOS - check and prompt for microphone permission
+    console.log("🎤 Checking microphone permissions...");
+    
+    try {
+      // Try to get microphone permission status using AppleScript
+      const result = execSync(
+        `osascript -e 'tell application "System Events" to return (name of processes whose name contains "sox" or name contains "rec")'`,
+        { encoding: "utf-8", stdio: ["pipe", "pipe", "pipe"] }
+      );
+      // If we get here without error, we have some level of access
+    } catch {
+      // Ignore errors from the check itself
+    }
+
+    // Actually test microphone access by trying to record briefly
+    try {
+      // Check if sox/rec is available
+      execSync("which sox", { stdio: "pipe" });
+      
+      // Try a quick recording to trigger permission prompt
+      console.log("   Testing microphone access (this may prompt for permission)...");
+      execSync("rec -q -t raw -r 16000 -b 16 -c 1 -e signed-integer /dev/null trim 0 0.1 2>/dev/null || true", {
+        timeout: 5000,
+        stdio: "pipe",
+      });
+      
+      console.log("✅ Microphone permission granted\n");
+      return true;
+    } catch {
+      // sox not installed or permission denied
+      console.log("⚠️  Could not verify microphone access.");
+      console.log("   If prompted, please grant microphone permission in System Preferences.");
+      console.log("   System Preferences > Security & Privacy > Privacy > Microphone\n");
+      
+      // Ask user to continue anyway
+      const shouldContinue = await askUserConfirmation(
+        "Continue without confirmed microphone access? (y/n): "
+      );
+      return shouldContinue;
+    }
+  } else if (platform === "linux") {
+    // Linux - check if audio devices are accessible
+    console.log("🎤 Checking audio devices...");
+    
+    try {
+      // Check for ALSA devices
+      execSync("arecord -l 2>/dev/null | grep -q card", { stdio: "pipe" });
+      console.log("✅ Audio recording devices found\n");
+      return true;
+    } catch {
+      console.log("⚠️  No audio recording devices found.");
+      console.log("   Make sure your microphone is connected and ALSA is configured.\n");
+      
+      const shouldContinue = await askUserConfirmation(
+        "Continue without confirmed microphone access? (y/n): "
+      );
+      return shouldContinue;
+    }
+  } else if (platform === "win32") {
+    // Windows - just inform the user
+    console.log("🎤 On Windows, you may be prompted to grant microphone access.\n");
+    return true;
+  }
+
+  return true;
+}
+
+function askUserConfirmation(question: string): Promise<boolean> {
+  return new Promise((resolve) => {
+    const rl = readline.createInterface({
+      input: process.stdin,
+      output: process.stdout,
+    });
+
+    rl.question(question, (answer) => {
+      rl.close();
+      resolve(answer.toLowerCase() === "y" || answer.toLowerCase() === "yes");
+    });
+  });
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
 // State Loading
 // ─────────────────────────────────────────────────────────────────────────────
 
@@ -124,9 +254,9 @@ function loadState(env: Environment): StateFile {
 function resolveTarget(
   state: StateFile,
   target: string,
-  isSquad: boolean
+  resourceType: ResourceType
 ): string {
-  if (isSquad) {
+  if (resourceType === "squad") {
     const squads = (state as StateFile & { squads?: Record<string, string> }).squads || {};
     const uuid = squads[target];
     if (!uuid) {
@@ -186,7 +316,7 @@ async function createCall(
     },
   };
 
-  if (config.isSquad) {
+  if (config.resourceType === "squad") {
     body.squadId = targetId;
   } else {
     body.assistantId = targetId;
@@ -450,13 +580,21 @@ function createMicrophoneStream(
 
 async function main() {
   const config = parseArgs();
-  const state = loadState(config.env);
-  const targetId = resolveTarget(state, config.target, config.isSquad);
 
-  const targetType = config.isSquad ? "squad" : "assistant";
   console.log(`\n🚀 Starting WebSocket call`);
   console.log(`   Environment: ${config.env}`);
-  console.log(`   ${targetType}: ${config.target}`);
+  console.log(`   ${config.resourceType}: ${config.target}\n`);
+
+  // Check microphone permissions first
+  const hasPermission = await checkMicrophonePermission();
+  if (!hasPermission) {
+    console.log("❌ Call cancelled due to microphone permission issues.");
+    process.exit(1);
+  }
+
+  const state = loadState(config.env);
+  const targetId = resolveTarget(state, config.target, config.resourceType);
+
   console.log(`   UUID: ${targetId}\n`);
 
   const call = await createCall(config, targetId);
