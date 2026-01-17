@@ -65,8 +65,9 @@ echo "VAPI_TOKEN=your-token-here" > .env.dev
 | `npm run pull:prod` | Pull resources from prod |
 | `npm run apply:dev` | Push local YAML files to Vapi (dev) |
 | `npm run apply:prod` | Push local YAML files to Vapi (prod) |
-| `npm run call:dev <name>` | Start a WebSocket call to an assistant (dev) |
-| `npm run call:prod <name>` | Start a WebSocket call to an assistant (prod) |
+| `npm run call:dev -- -a <name>` | Start a WebSocket call to an assistant (dev) |
+| `npm run call:dev -- -s <name>` | Start a WebSocket call to a squad (dev) |
+| `npm run call:prod -- -a <name>` | Start a WebSocket call to an assistant (prod) |
 
 ### Basic Workflow
 
@@ -84,9 +85,9 @@ npm run apply:dev
 
 ## How-To Guides
 
-### How to Make a WebSocket Call to an Assistant
+### How to Make a WebSocket Call to an Assistant or Squad
 
-Test your assistants directly from the terminal using real-time voice calls.
+Test your assistants and squads directly from the terminal using real-time voice calls.
 
 **Prerequisites (Optional but recommended for audio):**
 
@@ -100,7 +101,7 @@ brew install sox
 
 > **Note:** The call script works without these dependencies but will only show transcripts (no audio I/O).
 
-**Step 1:** Ensure your assistant is deployed
+**Step 1:** Ensure your assistant/squad is deployed
 
 ```bash
 npm run apply:dev
@@ -109,24 +110,41 @@ npm run apply:dev
 **Step 2:** Start the call
 
 ```bash
-# Basic usage
-npm run call:dev my-assistant
+# Call an assistant
+bun run call:dev -a my-assistant
 
-# Nested assistant (in subdirectory)
-npm run call:dev company-1/inbound-support
+# Call a nested assistant (in subdirectory)
+bun run call:dev -a company-1/inbound-support
 
-# Call a squad (when squad support is added)
-npm run call:dev my-squad -- --squad
+# Call a squad
+bun run call:dev -s my-squad
+
+# Call in production
+bun run call:prod -a my-assistant
 ```
 
-**Step 3:** Speak into your microphone
+**CLI Options:**
+
+| Flag | Description |
+|------|-------------|
+| `-a <name>` | Call an assistant by name |
+| `-s <name>` | Call a squad by name |
+
+**Step 3:** Grant microphone permissions
+
+On first run, the script will check for microphone permissions:
+- **macOS**: You may see a system permission prompt. Grant access in System Preferences > Security & Privacy > Privacy > Microphone
+- **Linux**: Ensure ALSA is configured and your user has access to audio devices
+- **Windows**: You may be prompted to grant microphone access
+
+**Step 4:** Speak into your microphone
 
 The terminal will show:
 - 🎤 Your speech transcripts
 - 🤖 Assistant responses
 - 📞 Call status updates
 
-**Step 4:** End the call
+**Step 5:** End the call
 
 Press `Ctrl+C` to gracefully end the call.
 
@@ -136,6 +154,10 @@ Press `Ctrl+C` to gracefully end the call.
 🚀 Starting WebSocket call
    Environment: dev
    assistant: my-assistant
+
+🎤 Checking microphone permissions...
+✅ Microphone permission granted
+
    UUID: 88d807a0-854a-4a95-960f-6b69921ff877
 
 📞 Creating call...
@@ -160,6 +182,7 @@ Press `Ctrl+C` to gracefully end the call.
 | Issue | Solution |
 |-------|----------|
 | `Assistant not found` | Run `npm run apply:dev` first to deploy |
+| `Squad not found` | Ensure squads are added to the state file |
 | `mic module not installed` | Run `npm install mic` |
 | `speaker module not installed` | Run `npm install speaker` |
 | No audio on macOS | Install sox: `brew install sox` |
