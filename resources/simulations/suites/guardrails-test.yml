@@ -1,0 +1,5 @@
+name: Guardrails Test Suite
+simulationIds:
+  - guardrails-case-1
+  - guardrails-case-2
+  - guardrails-case-3
