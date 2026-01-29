@@ -1,0 +1,45 @@
+type: function
+function:
+  name: resolve_address
+  strict: true
+  description: |-
+    Resolve a spoken address to a Roofr addressId.
+
+    Use case 1 - Initial request: Send the address string collected from caller.
+    Use case 2 - After disambiguation: Send the selected address string and googlePlaceId to get the addressId for the address selected by the caller.
+
+    Returns:
+    - addressId: when address resolves to a single match
+    - suggestions: array of {address, googlePlaceId} when multiple matches found
+
+    Retry up to 3 times if no matches found. Transfer to human if still unresolved.
+  parameters:
+    type: object
+    properties:
+      address:
+        description: |-
+          The address string spoken by the caller. Include street, city, and state if provided.
+          Use this for initial address collection and after caller selects from disambiguation options.
+          Example: "123 Main Street, Austin, Texas"
+        type: string
+        default: ""
+      googlePlaceId:
+        description: |-
+          Google Place ID from a previous suggestions response.
+          Use this after caller selects from disambiguation options.
+        type: string
+    required: []
+messages:
+  - type: request-start
+    content: Let me verify that address.
+    blocking: true
+  - type: request-response-delayed
+    content: Still looking up that address.
+    timingMilliseconds: 5000
+server:
+  url: https://app-v2.roofr-staging.com/api/v1/voice-lead/vapi/webhook/03e5c715-5ea0-46a1-a69e-3f4a01f85eb5
+  timeoutSeconds: 20
+  headers:
+    Content-Type: application/json
+  credentialId: 2f6db611-ad08-4099-8bd8-74db37b0a07e
+async: false

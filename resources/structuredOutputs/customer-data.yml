@@ -1,0 +1,42 @@
+name: Customer Data
+type: ai
+description: Extracts key call data including estimate status, customer contact info, address, callback requests, and call reason from the conversation.
+schema:
+  type: object
+  properties:
+    callReason:
+      enum:
+        - roof_replacement
+        - roof_repair
+        - other_new_project
+        - existing_project
+        - spam
+      type: string
+      description: "The primary reason the caller called. roof_replacement: caller wants full roof replacement. roof_repair: caller needs repairs to existing roof. other_new_project: new project that isn't replacement or repair (e.g., inspection, gutters, new construction). existing_project: caller asking about an ongoing/existing project or previous work. spam: spam, wrong number, or non-roofing inquiry."
+    addressUuid:
+      type: string
+      description: The UUID of the resolved address from the address resolution tool. Only include if an address was successfully resolved. Null otherwise.
+    customerName:
+      type: string
+      description: The customer's full name as provided during the call. Null if not collected.
+    customerEmail:
+      type: string
+      description: The customer's email address. Null if not collected.
+    customerPhone:
+      type: string
+      description: The customer's phone number. Null if not collected.
+    estimateProvided:
+      type: boolean
+      description: True if the get_estimate tool was called successfully AND the response included an estimates array with at least one item in it. False if no estimate was requested, the tool failed, or the estimates array was empty.
+    callbackRequested:
+      type: boolean
+      description: True if the caller explicitly requested a human/roofer to call them back. False otherwise.
+model:
+  model: gpt-4.1-mini
+  provider: openai
+  temperature: 0
+assistantIds:
+  - 633ab678-1ca9-4722-ab65-9bb1e519db1f
+  - 1e7f057c-d984-409d-9a94-75f722e3a581
+workflowIds: []
+target: messages

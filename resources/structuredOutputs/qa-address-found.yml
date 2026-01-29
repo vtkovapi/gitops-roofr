@@ -1,0 +1,26 @@
+name: QA Address Found
+type: ai
+description: Check if the address has been successfully found by the assistant during the call
+schema:
+  enum:
+    - address_found
+    - no_result
+    - error
+    - not_reached
+  type: string
+  description: |-
+    Evaluates the outcome of the address resolution step during the call. Analyze the resolve_address tool calls and their results:
+
+    - address_found: Address found during the address verification (success)
+    - no_result: No matches found after max retries (transfer)
+    - error: System/API error occurred (transfer)
+    - not_reached: Address step never happened during the call
+model:
+  model: gpt-4.1-mini
+  provider: openai
+  temperature: 0
+assistantIds:
+  - 633ab678-1ca9-4722-ab65-9bb1e519db1f
+  - 1e7f057c-d984-409d-9a94-75f722e3a581
+workflowIds: []
+target: messages

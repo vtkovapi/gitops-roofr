@@ -1,0 +1,21 @@
+name: QA Estimate Provided
+type: ai
+description: Determine the outcome of the estimate flow
+schema:
+  enum:
+    - provided
+    - declined_by_caller
+    - commercial_transfer
+    - inspection_required
+    - api_failed
+    - not_reached
+  type: string
+model:
+  model: gpt-4.1-mini
+  provider: openai
+  temperature: 0
+assistantIds:
+  - 633ab678-1ca9-4722-ab65-9bb1e519db1f
+  - 1e7f057c-d984-409d-9a94-75f722e3a581
+workflowIds: []
+target: messages

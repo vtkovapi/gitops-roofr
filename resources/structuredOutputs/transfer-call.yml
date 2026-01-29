@@ -1,0 +1,39 @@
+name: Transfer Call
+type: ai
+description: Determine if and why the call was transferred to a human
+schema:
+  enum:
+    - existing_project
+    - commercial_property
+    - address_unresolved
+    - estimate_failed
+    - caller_requested
+    - system_error
+    - not_transferred
+  type: string
+  description: |-
+    Analyze the call transcript to determine if the call was transferred and why.
+
+    Return EXACTLY ONE value:
+
+    **Transfer reasons:**
+    - existing_project — Caller asked about ongoing/existing work or project status
+    - commercial_property — Property is commercial, not residential
+    - address_unresolved — Address couldn't be verified after multiple retries
+    - estimate_failed — Estimate API failed or returned error
+    - caller_requested — Caller explicitly asked to speak with a human
+    - system_error — Technical error during call
+
+    **No transfer:**
+    - not_transferred — Call was NOT transferred to a human
+
+    Look for: transfer_call tool invocation, phrases like "Let me connect you", "I'll transfer you", and the reason stated before transfer.
+model:
+  model: gpt-4.1-mini
+  provider: openai
+  temperature: 0
+assistantIds:
+  - 633ab678-1ca9-4722-ab65-9bb1e519db1f
+  - 1e7f057c-d984-409d-9a94-75f722e3a581
+workflowIds: []
+target: messages

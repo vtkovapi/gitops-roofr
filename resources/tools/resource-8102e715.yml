@@ -1,0 +1,12 @@
+type: endCall
+function:
+  name: end_call_tool
+  description: Allows you as the agent to terminate the call.
+  parameters:
+    type: object
+    properties: {}
+    required: []
+messages:
+  - type: request-start
+    blocking: false
+async: false

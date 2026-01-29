@@ -1,0 +1,20 @@
+name: QA Lead Intake
+type: ai
+description: Determine how much contact information was collected during the call
+schema:
+  enum:
+    - complete
+    - address_unverified
+    - no_address
+    - name_only
+    - not_started
+  type: string
+model:
+  model: gpt-4.1-mini
+  provider: openai
+  temperature: 0
+assistantIds:
+  - 633ab678-1ca9-4722-ab65-9bb1e519db1f
+  - 1e7f057c-d984-409d-9a94-75f722e3a581
+workflowIds: []
+target: messages

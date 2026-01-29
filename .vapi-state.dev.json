@@ -1,15 +1,31 @@
 {
   "assistants": {
-    "inbound-customer-support": "88d807a0-854a-4a95-960f-6b69921ff877",
-    "company-1/inbound-customer-support": "0a2c0df1-1ec8-424b-8081-12498771e536"
+    "qa-get-estimate-test": "11dbd83e-a118-4d47-bb59-1a427ff7b937",
+    "qa-caller-id-test": "60e1addd-3b59-48be-8a4f-ddab1b40326d",
+    "qa-human-transfer-receiver": "afe180b6-9bd5-46a4-b96f-bbae4d35a41e",
+    "qa-address-resolution-tester": "e9ed5d49-e79e-4b3d-a8b1-f8e7ae47f84e",
+    "everblue-estimate-agent": "1e7f057c-d984-409d-9a94-75f722e3a581",
+    "everblue-main-agent": "633ab678-1ca9-4722-ab65-9bb1e519db1f",
+    "santa-reporting-line": "5b4c0e8e-56d7-44d7-8153-326570a04cd3",
+    "number-not-assigned": "189878ff-bfdb-4d08-a6fa-9018e3336556",
+    "santa": "06540183-4c2c-4d54-8853-0a2b3f4feb90",
+    "riley": "d776412b-62b4-4ffd-b1de-e382850db7b4"
   },
   "structuredOutputs": {
-    "customer-sentiment": "7fd0fbf1-4309-49b7-8560-bec9e0237f95"
+    "customer-data": "a2216b10-25f5-4094-95e5-3e9e4a9f8225",
+    "qa-estimate-provided": "414ddc83-72eb-4a2f-af03-4be3a079b457",
+    "qa-lead-intake": "08c5177f-789f-4e2c-98c2-31a684785c5b",
+    "customer-frustrated": "0b522fdf-d7ce-40c2-b99a-0a8a46cafd1d",
+    "transfer-call": "e2f29f25-ec35-4834-acb4-92cf4bc3e3ee",
+    "success-evaluation-pass-fail": "03c8abc3-7c66-45da-a4f8-2dc611b86e57",
+    "qa-address-found": "ff6fa17f-f381-4a88-a97a-ca2828e78548",
+    "call-summary": "76f729d8-ea01-4105-841b-de9282032065"
   },
   "tools": {
-    "transfer-call": "0a0df4e7-ee96-4e0b-95dd-e534bbcb04c6",
-    "get-user": "4e7b31f8-9c2b-4032-88f3-e86f10d95e28",
-    "company-1/transfer-call": "4ebfe4bb-6887-4295-b598-30c008bb948c",
-    "handoff": "b1429fc9-45f6-4289-ba48-96ac892e65d7"
+    "resource-a98a8455": "a98a8455-77e6-414d-980f-02f88350ddf6",
+    "resource-ed6bd77c": "ed6bd77c-afb0-412c-a392-2a36874858d5",
+    "resource-254951d0": "254951d0-8128-44c4-85bf-e3b09c996a9a",
+    "resource-d9b622dd": "d9b622dd-cea2-42b8-9d40-1515f1bb4d38",
+    "resource-8102e715": "8102e715-4632-4d55-b9ea-1f0a6b465990"
   }
 }
