@@ -63,6 +63,54 @@ export function resolveAssistantIds(
     .filter((id): id is string => id !== null);
 }
 
+export function resolvePersonalityId(
+  personalityId: string,
+  state: StateFile
+): string | null {
+  const cleanId = personalityId.split("##")[0]?.trim() ?? "";
+  const uuid = state.personalities[cleanId];
+  if (!uuid) {
+    console.warn(`  ⚠️  Personality reference not found: ${cleanId}`);
+    return null;
+  }
+  return uuid;
+}
+
+export function resolveScenarioId(
+  scenarioId: string,
+  state: StateFile
+): string | null {
+  const cleanId = scenarioId.split("##")[0]?.trim() ?? "";
+  const uuid = state.scenarios[cleanId];
+  if (!uuid) {
+    console.warn(`  ⚠️  Scenario reference not found: ${cleanId}`);
+    return null;
+  }
+  return uuid;
+}
+
+export function resolveSimulationId(
+  simulationId: string,
+  state: StateFile
+): string | null {
+  const cleanId = simulationId.split("##")[0]?.trim() ?? "";
+  const uuid = state.simulations[cleanId];
+  if (!uuid) {
+    console.warn(`  ⚠️  Simulation reference not found: ${cleanId}`);
+    return null;
+  }
+  return uuid;
+}
+
+export function resolveSimulationIds(
+  simulationIds: string[],
+  state: StateFile
+): string[] {
+  return simulationIds
+    .map((refId: string) => resolveSimulationId(refId, state))
+    .filter((id): id is string => id !== null);
+}
+
 export function resolveReferences(
   data: Record<string, unknown>,
   state: StateFile
@@ -140,6 +188,53 @@ export function resolveReferences(
     }
   }
 
+  // Resolve members[].assistantId in squads
+  if (Array.isArray(resolved.members)) {
+    for (const member of resolved.members as Record<string, unknown>[]) {
+      if (typeof member.assistantId === "string") {
+        const resolvedId = resolveAssistantId(member.assistantId, state);
+        if (resolvedId) {
+          member.assistantId = resolvedId;
+        }
+      }
+      // Resolve assistantDestinations[].assistantId
+      if (Array.isArray(member.assistantDestinations)) {
+        for (const dest of member.assistantDestinations as Record<string, unknown>[]) {
+          if (typeof dest.assistantId === "string") {
+            const resolvedId = resolveAssistantId(dest.assistantId, state);
+            if (resolvedId) {
+              dest.assistantId = resolvedId;
+            }
+          }
+        }
+      }
+    }
+  }
+
+  // Resolve personalityId in simulations
+  if (typeof resolved.personalityId === "string") {
+    const resolvedId = resolvePersonalityId(resolved.personalityId, state);
+    if (resolvedId) {
+      resolved.personalityId = resolvedId;
+    }
+  }
+
+  // Resolve scenarioId in simulations
+  if (typeof resolved.scenarioId === "string") {
+    const resolvedId = resolveScenarioId(resolved.scenarioId, state);
+    if (resolvedId) {
+      resolved.scenarioId = resolvedId;
+    }
+  }
+
+  // Resolve simulationIds in simulation suites
+  if (Array.isArray(resolved.simulationIds)) {
+    resolved.simulationIds = resolveSimulationIds(
+      resolved.simulationIds as string[],
+      state
+    );
+  }
+
   return resolved;
 }
 
@@ -147,14 +242,22 @@ export function resolveReferences(
 // Reference Extraction - Find all IDs referenced in a resource
 // ─────────────────────────────────────────────────────────────────────────────
 
-export function extractReferencedIds(data: Record<string, unknown>): {
+export interface ExtractedReferences {
   tools: string[];
   structuredOutputs: string[];
   assistants: string[];
-} {
+  personalities: string[];
+  scenarios: string[];
+  simulations: string[];
+}
+
+export function extractReferencedIds(data: Record<string, unknown>): ExtractedReferences {
   const tools: string[] = [];
   const structuredOutputs: string[] = [];
   const assistants: string[] = [];
+  const personalities: string[] = [];
+  const scenarios: string[] = [];
+  const simulations: string[] = [];
 
   // Helper to clean IDs (remove comments)
   const cleanId = (id: string) => id.split("##")[0]?.trim() ?? "";
@@ -209,6 +312,38 @@ export function extractReferencedIds(data: Record<string, unknown>): {
     }
   }
 
-  return { tools, structuredOutputs, assistants };
+  // Check members[].assistantId in squads
+  if (Array.isArray(data.members)) {
+    for (const member of data.members as Record<string, unknown>[]) {
+      if (typeof member.assistantId === "string") {
+        assistants.push(cleanId(member.assistantId));
+      }
+      // Check assistantDestinations[].assistantId
+      if (Array.isArray(member.assistantDestinations)) {
+        for (const dest of member.assistantDestinations as Record<string, unknown>[]) {
+          if (typeof dest.assistantId === "string") {
+            assistants.push(cleanId(dest.assistantId));
+          }
+        }
+      }
+    }
+  }
+
+  // Check personalityId in simulations
+  if (typeof data.personalityId === "string") {
+    personalities.push(cleanId(data.personalityId));
+  }
+
+  // Check scenarioId in simulations
+  if (typeof data.scenarioId === "string") {
+    scenarios.push(cleanId(data.scenarioId));
+  }
+
+  // Check simulationIds in simulation suites
+  if (Array.isArray(data.simulationIds)) {
+    simulations.push(...(data.simulationIds as string[]).map(cleanId));
+  }
+
+  return { tools, structuredOutputs, assistants, personalities, scenarios, simulations };
 }
 

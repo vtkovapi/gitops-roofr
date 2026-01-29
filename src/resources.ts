@@ -5,11 +5,45 @@ import { existsSync } from "fs";
 import { RESOURCES_DIR } from "./config.ts";
 import type { ResourceFile, ResourceType } from "./types.ts";
 
+// Map resource types to their folder paths (relative to resources/)
+const FOLDER_MAP: Record<ResourceType, string> = {
+  tools: "tools",
+  structuredOutputs: "structuredOutputs",
+  assistants: "assistants",
+  squads: "squads",
+  personalities: "simulations/personalities",
+  scenarios: "simulations/scenarios",
+  simulations: "simulations/tests",
+  simulationSuites: "simulations/suites",
+};
+
 // ─────────────────────────────────────────────────────────────────────────────
 // Resource Loading
 // ─────────────────────────────────────────────────────────────────────────────
 
-const VALID_EXTENSIONS = [".yml", ".yaml", ".ts"];
+const VALID_EXTENSIONS = [".yml", ".yaml", ".ts", ".md"];
+
+/**
+ * Parse a markdown file with YAML frontmatter
+ * Format:
+ * ---
+ * key: value
+ * ---
+ * Markdown content (becomes system prompt)
+ */
+function parseFrontmatter(content: string): { config: Record<string, unknown>; body: string } {
+  const frontmatterRegex = /^---\r?\n([\s\S]*?)\r?\n---\r?\n?([\s\S]*)$/;
+  const match = content.match(frontmatterRegex);
+  
+  if (!match) {
+    throw new Error("Invalid frontmatter format - expected YAML between --- delimiters");
+  }
+  
+  const [, yamlContent, body] = match;
+  const config = parseYaml(yamlContent) as Record<string, unknown>;
+  
+  return { config, body: body.trim() };
+}
 
 /**
  * Recursively scan a directory for resource files (.yml, .yaml, .ts)
@@ -50,7 +84,8 @@ async function scanDirectory(dir: string, baseDir: string): Promise<string[]> {
 export async function loadResources<T>(
   type: ResourceType
 ): Promise<ResourceFile<T>[]> {
-  const resourceDir = join(RESOURCES_DIR, type);
+  const folderPath = FOLDER_MAP[type];
+  const resourceDir = join(RESOURCES_DIR, folderPath);
 
   if (!existsSync(resourceDir)) {
     console.log(`📁 No ${type} directory found, skipping...`);
@@ -92,6 +127,27 @@ export async function loadResources<T>(
         }
       } catch (error) {
         throw new Error(`Failed to import TypeScript resource "${relativePath}": ${error}`);
+      }
+    } else if (ext === ".md") {
+      // Parse Markdown files with YAML frontmatter (for assistants with system prompts)
+      try {
+        const content = await readFile(filePath, "utf-8");
+        const { config, body } = parseFrontmatter(content);
+        
+        // Inject markdown body as system message if present
+        if (body) {
+          const model = (config.model as Record<string, unknown>) || {};
+          const existingMessages = Array.isArray(model.messages) ? model.messages : [];
+          model.messages = [
+            { role: "system", content: body },
+            ...existingMessages.filter((m: { role?: string }) => m.role !== "system"),
+          ];
+          config.model = model;
+        }
+        
+        data = config as T;
+      } catch (error) {
+        throw new Error(`Failed to parse Markdown resource "${relativePath}": ${error}`);
       }
     } else {
       // Parse YAML files
