@@ -5,6 +5,7 @@ import type {
   StateFile,
   LoadedResources,
   OrphanedResource,
+  ResourceType,
 } from "./types.ts";
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -30,9 +31,11 @@ export function findOrphanedResources(
 // Reference Checking - Find resources that reference a given resource
 // ─────────────────────────────────────────────────────────────────────────────
 
+type ReferenceableType = "tools" | "structuredOutputs" | "assistants" | "personalities" | "scenarios" | "simulations";
+
 export function findReferencingResources(
   targetId: string,
-  targetType: "tools" | "structuredOutputs" | "assistants",
+  targetType: ReferenceableType,
   allResources: LoadedResources
 ): string[] {
   const referencingResources: string[] = [];
@@ -40,25 +43,40 @@ export function findReferencingResources(
   const checkResource = (resource: ResourceFile) => {
     const refs = extractReferencedIds(resource.data as Record<string, unknown>);
 
-    // resourceId already includes the full path (e.g., "assistants/healthcare/booking")
     if (targetType === "tools" && refs.tools.includes(targetId)) {
       referencingResources.push(resource.resourceId);
     }
-    if (
-      targetType === "structuredOutputs" &&
-      refs.structuredOutputs.includes(targetId)
-    ) {
+    if (targetType === "structuredOutputs" && refs.structuredOutputs.includes(targetId)) {
       referencingResources.push(resource.resourceId);
     }
     if (targetType === "assistants" && refs.assistants.includes(targetId)) {
       referencingResources.push(resource.resourceId);
     }
+    if (targetType === "personalities" && refs.personalities.includes(targetId)) {
+      referencingResources.push(resource.resourceId);
+    }
+    if (targetType === "scenarios" && refs.scenarios.includes(targetId)) {
+      referencingResources.push(resource.resourceId);
+    }
+    if (targetType === "simulations" && refs.simulations.includes(targetId)) {
+      referencingResources.push(resource.resourceId);
+    }
   };
 
+  // Check all resource types that might have references
   for (const resource of allResources.assistants) {
     checkResource(resource);
   }
   for (const resource of allResources.structuredOutputs) {
+    checkResource(resource);
+  }
+  for (const resource of allResources.squads) {
+    checkResource(resource);
+  }
+  for (const resource of allResources.simulations) {
+    checkResource(resource);
+  }
+  for (const resource of allResources.simulationSuites) {
     checkResource(resource);
   }
 
@@ -68,6 +86,18 @@ export function findReferencingResources(
 // ─────────────────────────────────────────────────────────────────────────────
 // Resource Deletion
 // ─────────────────────────────────────────────────────────────────────────────
+
+// Map resource types to their API delete endpoints
+const DELETE_ENDPOINT_MAP: Record<ResourceType, string> = {
+  tools: "/tool",
+  structuredOutputs: "/structured-output",
+  assistants: "/assistant",
+  squads: "/squad",
+  personalities: "/eval/simulation/personality",
+  scenarios: "/eval/simulation/scenario",
+  simulations: "/eval/simulation",
+  simulationSuites: "/eval/simulation/suite",
+};
 
 export async function deleteOrphanedResources(
   loadedResources: LoadedResources,
@@ -86,6 +116,26 @@ export async function deleteOrphanedResources(
     loadedResources.assistants.map((a) => a.resourceId),
     state.assistants
   );
+  const orphanedSquads = findOrphanedResources(
+    loadedResources.squads.map((s) => s.resourceId),
+    state.squads
+  );
+  const orphanedPersonalities = findOrphanedResources(
+    loadedResources.personalities.map((p) => p.resourceId),
+    state.personalities
+  );
+  const orphanedScenarios = findOrphanedResources(
+    loadedResources.scenarios.map((s) => s.resourceId),
+    state.scenarios
+  );
+  const orphanedSimulations = findOrphanedResources(
+    loadedResources.simulations.map((s) => s.resourceId),
+    state.simulations
+  );
+  const orphanedSimulationSuites = findOrphanedResources(
+    loadedResources.simulationSuites.map((s) => s.resourceId),
+    state.simulationSuites
+  );
 
   // Check for orphan references before deleting
   const errors: string[] = [];
@@ -93,35 +143,42 @@ export async function deleteOrphanedResources(
   for (const { resourceId } of orphanedTools) {
     const refs = findReferencingResources(resourceId, "tools", loadedResources);
     if (refs.length > 0) {
-      errors.push(
-        `Cannot delete tool "${resourceId}" - still referenced by: ${refs.join(", ")}`
-      );
+      errors.push(`Cannot delete tool "${resourceId}" - still referenced by: ${refs.join(", ")}`);
     }
   }
 
   for (const { resourceId } of orphanedOutputs) {
-    const refs = findReferencingResources(
-      resourceId,
-      "structuredOutputs",
-      loadedResources
-    );
+    const refs = findReferencingResources(resourceId, "structuredOutputs", loadedResources);
     if (refs.length > 0) {
-      errors.push(
-        `Cannot delete structured output "${resourceId}" - still referenced by: ${refs.join(", ")}`
-      );
+      errors.push(`Cannot delete structured output "${resourceId}" - still referenced by: ${refs.join(", ")}`);
     }
   }
 
   for (const { resourceId } of orphanedAssistants) {
-    const refs = findReferencingResources(
-      resourceId,
-      "assistants",
-      loadedResources
-    );
+    const refs = findReferencingResources(resourceId, "assistants", loadedResources);
     if (refs.length > 0) {
-      errors.push(
-        `Cannot delete assistant "${resourceId}" - still referenced by: ${refs.join(", ")}`
-      );
+      errors.push(`Cannot delete assistant "${resourceId}" - still referenced by: ${refs.join(", ")}`);
+    }
+  }
+
+  for (const { resourceId } of orphanedPersonalities) {
+    const refs = findReferencingResources(resourceId, "personalities", loadedResources);
+    if (refs.length > 0) {
+      errors.push(`Cannot delete personality "${resourceId}" - still referenced by: ${refs.join(", ")}`);
+    }
+  }
+
+  for (const { resourceId } of orphanedScenarios) {
+    const refs = findReferencingResources(resourceId, "scenarios", loadedResources);
+    if (refs.length > 0) {
+      errors.push(`Cannot delete scenario "${resourceId}" - still referenced by: ${refs.join(", ")}`);
+    }
+  }
+
+  for (const { resourceId } of orphanedSimulations) {
+    const refs = findReferencingResources(resourceId, "simulations", loadedResources);
+    if (refs.length > 0) {
+      errors.push(`Cannot delete simulation "${resourceId}" - still referenced by: ${refs.join(", ")}`);
     }
   }
 
@@ -130,17 +187,78 @@ export async function deleteOrphanedResources(
     for (const error of errors) {
       console.error(`   ${error}`);
     }
-    console.error(
-      "\n   Remove the references before deleting these resources.\n"
-    );
+    console.error("\n   Remove the references before deleting these resources.\n");
     throw new Error("Cannot delete resources that are still referenced");
   }
 
-  // Delete in reverse dependency order: assistants → outputs → tools
+  // Delete in reverse dependency order:
+  // 1. Simulation suites (depends on simulations)
+  // 2. Simulations (depends on personalities, scenarios)
+  // 3. Scenarios, Personalities (no deps on other new types)
+  // 4. Squads (depends on assistants)
+  // 5. Assistants (depends on tools, structuredOutputs)
+  // 6. Structured outputs
+  // 7. Tools
+
+  for (const { resourceId, uuid } of orphanedSimulationSuites) {
+    try {
+      console.log(`  🗑️  Deleting simulation suite: ${resourceId} (${uuid})`);
+      await vapiDelete(`${DELETE_ENDPOINT_MAP.simulationSuites}/${uuid}`);
+      delete state.simulationSuites[resourceId];
+    } catch (error) {
+      console.error(`  ❌ Failed to delete simulation suite ${resourceId}:`, error);
+      throw error;
+    }
+  }
+
+  for (const { resourceId, uuid } of orphanedSimulations) {
+    try {
+      console.log(`  🗑️  Deleting simulation: ${resourceId} (${uuid})`);
+      await vapiDelete(`${DELETE_ENDPOINT_MAP.simulations}/${uuid}`);
+      delete state.simulations[resourceId];
+    } catch (error) {
+      console.error(`  ❌ Failed to delete simulation ${resourceId}:`, error);
+      throw error;
+    }
+  }
+
+  for (const { resourceId, uuid } of orphanedScenarios) {
+    try {
+      console.log(`  🗑️  Deleting scenario: ${resourceId} (${uuid})`);
+      await vapiDelete(`${DELETE_ENDPOINT_MAP.scenarios}/${uuid}`);
+      delete state.scenarios[resourceId];
+    } catch (error) {
+      console.error(`  ❌ Failed to delete scenario ${resourceId}:`, error);
+      throw error;
+    }
+  }
+
+  for (const { resourceId, uuid } of orphanedPersonalities) {
+    try {
+      console.log(`  🗑️  Deleting personality: ${resourceId} (${uuid})`);
+      await vapiDelete(`${DELETE_ENDPOINT_MAP.personalities}/${uuid}`);
+      delete state.personalities[resourceId];
+    } catch (error) {
+      console.error(`  ❌ Failed to delete personality ${resourceId}:`, error);
+      throw error;
+    }
+  }
+
+  for (const { resourceId, uuid } of orphanedSquads) {
+    try {
+      console.log(`  🗑️  Deleting squad: ${resourceId} (${uuid})`);
+      await vapiDelete(`${DELETE_ENDPOINT_MAP.squads}/${uuid}`);
+      delete state.squads[resourceId];
+    } catch (error) {
+      console.error(`  ❌ Failed to delete squad ${resourceId}:`, error);
+      throw error;
+    }
+  }
+
   for (const { resourceId, uuid } of orphanedAssistants) {
     try {
       console.log(`  🗑️  Deleting assistant: ${resourceId} (${uuid})`);
-      await vapiDelete(`/assistant/${uuid}`);
+      await vapiDelete(`${DELETE_ENDPOINT_MAP.assistants}/${uuid}`);
       delete state.assistants[resourceId];
     } catch (error) {
       console.error(`  ❌ Failed to delete assistant ${resourceId}:`, error);
@@ -151,13 +269,10 @@ export async function deleteOrphanedResources(
   for (const { resourceId, uuid } of orphanedOutputs) {
     try {
       console.log(`  🗑️  Deleting structured output: ${resourceId} (${uuid})`);
-      await vapiDelete(`/structured-output/${uuid}`);
+      await vapiDelete(`${DELETE_ENDPOINT_MAP.structuredOutputs}/${uuid}`);
       delete state.structuredOutputs[resourceId];
     } catch (error) {
-      console.error(
-        `  ❌ Failed to delete structured output ${resourceId}:`,
-        error
-      );
+      console.error(`  ❌ Failed to delete structured output ${resourceId}:`, error);
       throw error;
     }
   }
@@ -165,7 +280,7 @@ export async function deleteOrphanedResources(
   for (const { resourceId, uuid } of orphanedTools) {
     try {
       console.log(`  🗑️  Deleting tool: ${resourceId} (${uuid})`);
-      await vapiDelete(`/tool/${uuid}`);
+      await vapiDelete(`${DELETE_ENDPOINT_MAP.tools}/${uuid}`);
       delete state.tools[resourceId];
     } catch (error) {
       console.error(`  ❌ Failed to delete tool ${resourceId}:`, error);

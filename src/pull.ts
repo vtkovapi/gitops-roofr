@@ -15,7 +15,7 @@ interface VapiResource {
   [key: string]: unknown;
 }
 
-// Fields to remove from resources before saving (server-managed fields)
+// Fields to remove from resources before saving (server-managed or computed fields)
 const EXCLUDED_FIELDS = [
   "id",
   "orgId",
@@ -23,17 +23,41 @@ const EXCLUDED_FIELDS = [
   "updatedAt",
   "analyticsMetadata",
   "isDeleted",
+  // Computed/derived fields that shouldn't be synced back
+  "isServerUrlSecretSet",  // Computed: indicates if server URL secret is set
+  "workflowIds",           // Server-managed: workflows are a separate resource type
 ];
 
 // ─────────────────────────────────────────────────────────────────────────────
 // API Functions
 // ─────────────────────────────────────────────────────────────────────────────
 
+// Map resource types to their API endpoints
+const ENDPOINT_MAP: Record<ResourceType, string> = {
+  tools: "/tool",
+  structuredOutputs: "/structured-output",
+  assistants: "/assistant",
+  squads: "/squad",
+  personalities: "/eval/simulation/personality",
+  scenarios: "/eval/simulation/scenario",
+  simulations: "/eval/simulation",
+  simulationSuites: "/eval/simulation/suite",
+};
+
+// Map resource types to their folder paths (relative to resources/)
+const FOLDER_MAP: Record<ResourceType, string> = {
+  tools: "tools",
+  structuredOutputs: "structuredOutputs",
+  assistants: "assistants",
+  squads: "squads",
+  personalities: "simulations/personalities",
+  scenarios: "simulations/scenarios",
+  simulations: "simulations/tests",
+  simulationSuites: "simulations/suites",
+};
+
 export async function fetchAllResources(resourceType: ResourceType): Promise<VapiResource[]> {
-  const endpoint = resourceType === "structuredOutputs" 
-    ? "/structured-output" 
-    : `/${resourceType.replace(/s$/, "")}`;
-  
+  const endpoint = ENDPOINT_MAP[resourceType];
   const url = `${VAPI_BASE_URL}${endpoint}`;
   
   const response = await fetch(url, {
@@ -127,6 +151,9 @@ function resolveReferencesToResourceIds(
   const toolsMap = buildReverseMap(state, "tools");
   const assistantsMap = buildReverseMap(state, "assistants");
   const structuredOutputsMap = buildReverseMap(state, "structuredOutputs");
+  const personalitiesMap = buildReverseMap(state, "personalities");
+  const scenariosMap = buildReverseMap(state, "scenarios");
+  const simulationsMap = buildReverseMap(state, "simulations");
   
   const resolved = { ...resource };
   
@@ -152,11 +179,12 @@ function resolveReferencesToResourceIds(
     resolved.artifactPlan = artifactPlan;
   }
   
-  // Resolve assistant_ids in structured outputs
-  if (Array.isArray(resolved.assistant_ids)) {
-    resolved.assistant_ids = (resolved.assistant_ids as string[]).map((uuid: string) =>
+  // Resolve assistantIds in structured outputs (API returns camelCase)
+  if (Array.isArray(resolved.assistantIds)) {
+    resolved.assistant_ids = (resolved.assistantIds as string[]).map((uuid: string) =>
       assistantsMap.get(uuid) ?? uuid
     );
+    delete resolved.assistantIds;
   }
   
   // Resolve assistantId in tool destinations (handoff tools)
@@ -172,6 +200,43 @@ function resolveReferencesToResourceIds(
     });
   }
   
+  // Resolve members[].assistantId in squads
+  if (Array.isArray(resolved.members)) {
+    resolved.members = (resolved.members as Record<string, unknown>[]).map((member) => {
+      const resolvedMember = { ...member };
+      if (typeof member.assistantId === "string") {
+        resolvedMember.assistantId = assistantsMap.get(member.assistantId) ?? member.assistantId;
+      }
+      // Resolve assistantDestinations[].assistantId
+      if (Array.isArray(member.assistantDestinations)) {
+        resolvedMember.assistantDestinations = (member.assistantDestinations as Record<string, unknown>[]).map((dest) => {
+          if (typeof dest.assistantId === "string") {
+            return { ...dest, assistantId: assistantsMap.get(dest.assistantId) ?? dest.assistantId };
+          }
+          return dest;
+        });
+      }
+      return resolvedMember;
+    });
+  }
+  
+  // Resolve personalityId in simulations
+  if (typeof resolved.personalityId === "string") {
+    resolved.personalityId = personalitiesMap.get(resolved.personalityId) ?? resolved.personalityId;
+  }
+  
+  // Resolve scenarioId in simulations
+  if (typeof resolved.scenarioId === "string") {
+    resolved.scenarioId = scenariosMap.get(resolved.scenarioId) ?? resolved.scenarioId;
+  }
+  
+  // Resolve simulationIds in simulation suites
+  if (Array.isArray(resolved.simulationIds)) {
+    resolved.simulationIds = (resolved.simulationIds as string[]).map((uuid: string) =>
+      simulationsMap.get(uuid) ?? uuid
+    );
+  }
+  
   return resolved;
 }
 
@@ -179,20 +244,77 @@ function resolveReferencesToResourceIds(
 // File Writing
 // ─────────────────────────────────────────────────────────────────────────────
 
+/**
+ * Extract system prompt from model.messages if present
+ * Returns the system prompt content and the cleaned data (without system message)
+ */
+function extractSystemPrompt(data: Record<string, unknown>): { systemPrompt: string | null; cleanedData: Record<string, unknown> } {
+  const model = data.model as Record<string, unknown> | undefined;
+  if (!model || !Array.isArray(model.messages)) {
+    return { systemPrompt: null, cleanedData: data };
+  }
+  
+  const messages = model.messages as Array<{ role?: string; content?: string }>;
+  const systemMessage = messages.find(m => m.role === "system");
+  
+  if (!systemMessage?.content) {
+    return { systemPrompt: null, cleanedData: data };
+  }
+  
+  // Remove system message from messages array
+  const remainingMessages = messages.filter(m => m.role !== "system");
+  
+  // Create cleaned data without system message
+  const cleanedData = { ...data };
+  const cleanedModel = { ...model };
+  
+  if (remainingMessages.length > 0) {
+    cleanedModel.messages = remainingMessages;
+  } else {
+    delete cleanedModel.messages;
+  }
+  
+  cleanedData.model = cleanedModel;
+  
+  return { systemPrompt: systemMessage.content, cleanedData };
+}
+
 async function writeResourceFile(
   resourceType: ResourceType,
   resourceId: string,
   data: Record<string, unknown>
 ): Promise<string> {
-  const dir = join(RESOURCES_DIR, resourceType);
-  const filePath = join(dir, `${resourceId}.yml`);
+  const folderPath = FOLDER_MAP[resourceType];
+  const dir = join(RESOURCES_DIR, folderPath);
   
-  // Ensure directory exists
+  // For assistants, check if there's a system prompt to extract
+  if (resourceType === "assistants") {
+    const { systemPrompt, cleanedData } = extractSystemPrompt(data);
+    
+    if (systemPrompt) {
+      // Write as .md with frontmatter
+      const filePath = join(dir, `${resourceId}.md`);
+      await mkdir(dirname(filePath), { recursive: true });
+      
+      const yamlContent = stringify(cleanedData, {
+        lineWidth: 0,
+        defaultStringType: "PLAIN",
+        defaultKeyType: "PLAIN",
+      });
+      
+      const mdContent = `---\n${yamlContent}---\n\n${systemPrompt}\n`;
+      await writeFile(filePath, mdContent);
+      
+      return filePath;
+    }
+  }
+  
+  // Default: write as .yml
+  const filePath = join(dir, `${resourceId}.yml`);
   await mkdir(dirname(filePath), { recursive: true });
   
-  // Convert to YAML and write
   const yamlContent = stringify(data, {
-    lineWidth: 0, // Don't wrap lines
+    lineWidth: 0,
     defaultStringType: "PLAIN",
     defaultKeyType: "PLAIN",
   });
@@ -281,12 +403,29 @@ async function main(): Promise<void> {
     tools: { created: 0, updated: 0 },
     structuredOutputs: { created: 0, updated: 0 },
     assistants: { created: 0, updated: 0 },
+    squads: { created: 0, updated: 0 },
+    personalities: { created: 0, updated: 0 },
+    scenarios: { created: 0, updated: 0 },
+    simulations: { created: 0, updated: 0 },
+    simulationSuites: { created: 0, updated: 0 },
   };
 
-  // Pull in dependency order (tools first, then structured outputs, then assistants)
+  // Pull in dependency order:
+  // 1. Base resources (tools, structuredOutputs)
+  // 2. Assistants (references tools, structuredOutputs)
+  // 3. Squads (references assistants)
+  // 4. Simulation building blocks (personalities, scenarios - no cross-dependencies)
+  // 5. Simulations (references personalities, scenarios)
+  // 6. Simulation suites (references simulations)
+  
   stats.tools = await pullResourceType("tools", state);
   stats.structuredOutputs = await pullResourceType("structuredOutputs", state);
   stats.assistants = await pullResourceType("assistants", state);
+  stats.squads = await pullResourceType("squads", state);
+  stats.personalities = await pullResourceType("personalities", state);
+  stats.scenarios = await pullResourceType("scenarios", state);
+  stats.simulations = await pullResourceType("simulations", state);
+  stats.simulationSuites = await pullResourceType("simulationSuites", state);
 
   // Save updated state
   await saveState(state);

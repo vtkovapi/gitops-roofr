@@ -111,6 +111,116 @@ export async function applyAssistant(
   }
 }
 
+export async function applySquad(
+  resource: ResourceFile,
+  state: StateFile
+): Promise<string> {
+  const { resourceId, data } = resource;
+  const existingUuid = state.squads[resourceId];
+
+  // Resolve assistant references in members
+  const payload = resolveReferences(data as Record<string, unknown>, state);
+
+  if (existingUuid) {
+    const updatePayload = removeExcludedKeys(payload, "squads");
+    console.log(`  🔄 Updating squad: ${resourceId} (${existingUuid})`);
+    await vapiRequest("PATCH", `/squad/${existingUuid}`, updatePayload);
+    return existingUuid;
+  } else {
+    console.log(`  ✨ Creating squad: ${resourceId}`);
+    const result = await vapiRequest("POST", "/squad", payload);
+    return result.id;
+  }
+}
+
+export async function applyPersonality(
+  resource: ResourceFile,
+  state: StateFile
+): Promise<string> {
+  const { resourceId, data } = resource;
+  const existingUuid = state.personalities[resourceId];
+
+  // Personalities contain inline assistant config, no external references to resolve
+  const payload = data as Record<string, unknown>;
+
+  if (existingUuid) {
+    const updatePayload = removeExcludedKeys(payload, "personalities");
+    console.log(`  🔄 Updating personality: ${resourceId} (${existingUuid})`);
+    await vapiRequest("PATCH", `/eval/simulation/personality/${existingUuid}`, updatePayload);
+    return existingUuid;
+  } else {
+    console.log(`  ✨ Creating personality: ${resourceId}`);
+    const result = await vapiRequest("POST", "/eval/simulation/personality", payload);
+    return result.id;
+  }
+}
+
+export async function applyScenario(
+  resource: ResourceFile,
+  state: StateFile
+): Promise<string> {
+  const { resourceId, data } = resource;
+  const existingUuid = state.scenarios[resourceId];
+
+  // Scenarios have no external references to resolve
+  const payload = data as Record<string, unknown>;
+
+  if (existingUuid) {
+    const updatePayload = removeExcludedKeys(payload, "scenarios");
+    console.log(`  🔄 Updating scenario: ${resourceId} (${existingUuid})`);
+    await vapiRequest("PATCH", `/eval/simulation/scenario/${existingUuid}`, updatePayload);
+    return existingUuid;
+  } else {
+    console.log(`  ✨ Creating scenario: ${resourceId}`);
+    const result = await vapiRequest("POST", "/eval/simulation/scenario", payload);
+    return result.id;
+  }
+}
+
+export async function applySimulation(
+  resource: ResourceFile,
+  state: StateFile
+): Promise<string> {
+  const { resourceId, data } = resource;
+  const existingUuid = state.simulations[resourceId];
+
+  // Resolve personality and scenario references
+  const payload = resolveReferences(data as Record<string, unknown>, state);
+
+  if (existingUuid) {
+    const updatePayload = removeExcludedKeys(payload, "simulations");
+    console.log(`  🔄 Updating simulation: ${resourceId} (${existingUuid})`);
+    await vapiRequest("PATCH", `/eval/simulation/${existingUuid}`, updatePayload);
+    return existingUuid;
+  } else {
+    console.log(`  ✨ Creating simulation: ${resourceId}`);
+    const result = await vapiRequest("POST", "/eval/simulation", payload);
+    return result.id;
+  }
+}
+
+export async function applySimulationSuite(
+  resource: ResourceFile,
+  state: StateFile
+): Promise<string> {
+  const { resourceId, data } = resource;
+  const existingUuid = state.simulationSuites[resourceId];
+
+  // Resolve simulation references
+  const payload = resolveReferences(data as Record<string, unknown>, state);
+
+  if (existingUuid) {
+    const updatePayload = removeExcludedKeys(payload, "simulationSuites");
+    console.log(`  🔄 Updating simulation suite: ${resourceId} (${existingUuid})`);
+    await vapiRequest("PATCH", `/eval/simulation/suite/${existingUuid}`, updatePayload);
+    return existingUuid;
+  } else {
+    console.log(`  ✨ Creating simulation suite: ${resourceId}`);
+    const result = await vapiRequest("POST", "/eval/simulation/suite", payload);
+    return result.id;
+  }
+}
+
 // ─────────────────────────────────────────────────────────────────────────────
 // Post-Apply: Update Tools with Assistant References (for handoff tools)
 // ─────────────────────────────────────────────────────────────────────────────
@@ -201,12 +311,27 @@ async function main(): Promise<void> {
   const tools = await loadResources<Record<string, unknown>>("tools");
   const structuredOutputs = await loadResources<Record<string, unknown>>("structuredOutputs");
   const assistants = await loadResources<Record<string, unknown>>("assistants");
+  const squads = await loadResources<Record<string, unknown>>("squads");
+  const personalities = await loadResources<Record<string, unknown>>("personalities");
+  const scenarios = await loadResources<Record<string, unknown>>("scenarios");
+  const simulations = await loadResources<Record<string, unknown>>("simulations");
+  const simulationSuites = await loadResources<Record<string, unknown>>("simulationSuites");
 
   // Delete orphaned resources first (checks for orphan references, then deletes)
   console.log("\n🗑️  Checking for deleted resources...\n");
-  await deleteOrphanedResources({ tools, structuredOutputs, assistants }, state);
+  await deleteOrphanedResources({ 
+    tools, structuredOutputs, assistants, squads,
+    personalities, scenarios, simulations, simulationSuites 
+  }, state);
 
-  // Apply in dependency order: tools → structured outputs → assistants
+  // Apply in dependency order:
+  // 1. Base resources (tools, structuredOutputs)
+  // 2. Assistants (references tools, structuredOutputs)
+  // 3. Squads (references assistants)
+  // 4. Simulation building blocks (personalities, scenarios)
+  // 5. Simulations (references personalities, scenarios)
+  // 6. Simulation suites (references simulations)
+
   console.log("\n🔧 Applying tools...\n");
   for (const tool of tools) {
     try {
@@ -246,6 +371,61 @@ async function main(): Promise<void> {
     }
   }
 
+  console.log("\n👥 Applying squads...\n");
+  for (const squad of squads) {
+    try {
+      const uuid = await applySquad(squad, state);
+      state.squads[squad.resourceId] = uuid;
+    } catch (error) {
+      console.error(`  ❌ Failed to apply squad ${squad.resourceId}:`, error);
+      throw error;
+    }
+  }
+
+  console.log("\n🎭 Applying personalities...\n");
+  for (const personality of personalities) {
+    try {
+      const uuid = await applyPersonality(personality, state);
+      state.personalities[personality.resourceId] = uuid;
+    } catch (error) {
+      console.error(`  ❌ Failed to apply personality ${personality.resourceId}:`, error);
+      throw error;
+    }
+  }
+
+  console.log("\n📋 Applying scenarios...\n");
+  for (const scenario of scenarios) {
+    try {
+      const uuid = await applyScenario(scenario, state);
+      state.scenarios[scenario.resourceId] = uuid;
+    } catch (error) {
+      console.error(`  ❌ Failed to apply scenario ${scenario.resourceId}:`, error);
+      throw error;
+    }
+  }
+
+  console.log("\n🧪 Applying simulations...\n");
+  for (const simulation of simulations) {
+    try {
+      const uuid = await applySimulation(simulation, state);
+      state.simulations[simulation.resourceId] = uuid;
+    } catch (error) {
+      console.error(`  ❌ Failed to apply simulation ${simulation.resourceId}:`, error);
+      throw error;
+    }
+  }
+
+  console.log("\n📦 Applying simulation suites...\n");
+  for (const suite of simulationSuites) {
+    try {
+      const uuid = await applySimulationSuite(suite, state);
+      state.simulationSuites[suite.resourceId] = uuid;
+    } catch (error) {
+      console.error(`  ❌ Failed to apply simulation suite ${suite.resourceId}:`, error);
+      throw error;
+    }
+  }
+
   // Second pass: Link resources to assistants (now that assistants exist)
   console.log("\n🔗 Linking tools to assistant destinations...\n");
   await updateToolAssistantRefs(tools, state);
@@ -265,6 +445,11 @@ async function main(): Promise<void> {
   console.log(`   Tools: ${Object.keys(state.tools).length}`);
   console.log(`   Structured Outputs: ${Object.keys(state.structuredOutputs).length}`);
   console.log(`   Assistants: ${Object.keys(state.assistants).length}`);
+  console.log(`   Squads: ${Object.keys(state.squads).length}`);
+  console.log(`   Personalities: ${Object.keys(state.personalities).length}`);
+  console.log(`   Scenarios: ${Object.keys(state.scenarios).length}`);
+  console.log(`   Simulations: ${Object.keys(state.simulations).length}`);
+  console.log(`   Simulation Suites: ${Object.keys(state.simulationSuites).length}`);
 }
 
 // Run the apply engine
