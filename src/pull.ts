@@ -48,7 +48,14 @@ export async function fetchAllResources(resourceType: ResourceType): Promise<Vap
     throw new Error(`API GET ${endpoint} failed (${response.status}): ${errorText}`);
   }
 
-  return response.json() as Promise<VapiResource[]>;
+  const data = await response.json();
+  
+  // Handle paginated response format (e.g., structured-output returns { results: [], metadata: {} })
+  if (data && typeof data === "object" && "results" in data && Array.isArray(data.results)) {
+    return data.results as VapiResource[];
+  }
+  
+  return data as VapiResource[];
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -210,7 +217,13 @@ export async function pullResourceType(
 ): Promise<PullStats> {
   console.log(`\n📥 Pulling ${resourceType}...`);
   
-  const resources = await fetchAllResources(resourceType);
+  const resources = await fetchAllResources(resourceType) ?? [];
+  
+  if (!Array.isArray(resources)) {
+    console.log(`   ⚠️  No ${resourceType} found (API returned non-array)`);
+    return { created: 0, updated: 0 };
+  }
+  
   console.log(`   Found ${resources.length} ${resourceType} in Vapi`);
   
   const reverseMap = buildReverseMap(state, resourceType);
