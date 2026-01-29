@@ -1,0 +1,15 @@
+name: "Case 1: New roofing estimate with clean address verification and handoff"
+instructions: "Persona: Cooperative homeowner seeking a new roof estimate. Goal: Get scheduled for an estimate. Steps: Clearly state it's a new roofing project, wait until you get asked the following questions and as asked, provide the answers like full name, when the agent asks, a US phone number, and the when asked 1212 2nd Ave, Seattle, WA. Answer verification questions promptly. Expect the assistant to verify the address. If asked if you would like to get an instant estimate, confirm, and answer all questions with one of the provided options. If asked about email, just make something up."
+evaluations:
+  - structuredOutputId: 414ddc83-72eb-4a2f-af03-4be3a079b457
+    comparator: =
+    value: provided
+    required: true
+  - structuredOutputId: 08c5177f-789f-4e2c-98c2-31a684785c5b
+    comparator: =
+    value: complete
+    required: true
+  - structuredOutputId: 0b522fdf-d7ce-40c2-b99a-0a8a46cafd1d
+    comparator: =
+    value: false
+    required: true

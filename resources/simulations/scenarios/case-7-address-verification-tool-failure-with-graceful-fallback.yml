@@ -1,0 +1,7 @@
+name: "Case 7: Address verification tool failure with graceful fallback"
+instructions: "Persona: Cooperative homeowner. Goal: New estimate. Steps: Confirm it's a new project, provide complete name, phone, and a valid full address. Simulate that the address verification tool is unavailable or times out. Expect the assistant to apologize, attempt a retry once, and if still failing, offer to proceed by taking the details for a callback or scheduling a manual follow-up without immediate handoff."
+evaluations:
+  - structuredOutputId: 03c8abc3-7c66-45da-a4f8-2dc611b86e57
+    comparator: =
+    value: true
+    required: true

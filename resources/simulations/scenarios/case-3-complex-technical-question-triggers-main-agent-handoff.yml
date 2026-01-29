@@ -1,0 +1,7 @@
+name: "Case 3: Complex technical question triggers Main Agent handoff"
+instructions: "Persona: Property manager with technical needs. Goal: Detailed product/warranty info. Steps: Ask, 'Can you compare GAF Timberline HDZ vs CertainTeed Landmark Pro and tell me your installation warranty terms in New Jersey?' Avoid requesting an estimate. Expect the assistant to recognize complexity and silently hand off to the Main Agent."
+evaluations:
+  - structuredOutputId: 03c8abc3-7c66-45da-a4f8-2dc611b86e57
+    comparator: =
+    value: true
+    required: true

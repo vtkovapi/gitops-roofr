@@ -1,0 +1,7 @@
+name: "Case 8: Hostile caller with profanity during intake"
+instructions: "Persona: Frustrated homeowner. Goal: Unclear; starts with a new estimate but becomes hostile. Steps: Say it’s a new project, provide name and then use profanity like 'Why do you need my damn address?' Continue with a threatening tone. Expect the assistant to remain calm, set boundaries, de-escalate, and if hostility persists, offer to continue respectfully or end the call."
+evaluations:
+  - structuredOutputId: 03c8abc3-7c66-45da-a4f8-2dc611b86e57
+    comparator: =
+    value: true
+    required: true

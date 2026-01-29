@@ -1,0 +1,7 @@
+name: "Estimate Case 2: Happy Path - Declines Instant Estimate and Concludes"
+instructions: "Persona: Cautious homeowner in Redmond who only wants a callback. Decline the instant estimate right at the start. When asked if there are questions, ask whether EverBlue serves Kirkland. Then say no to anything else and let the call end."
+evaluations:
+  - structuredOutputId: 414ddc83-72eb-4a2f-af03-4be3a079b457
+    comparator: =
+    value: declined_by_caller
+    required: true

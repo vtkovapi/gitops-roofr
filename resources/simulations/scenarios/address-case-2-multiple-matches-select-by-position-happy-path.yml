@@ -1,0 +1,7 @@
+name: "Address Case 2: Multiple Matches — Select by Position (Happy Path)"
+instructions: 'Persona: Cooperative user with a common street name. Start with: "100 Oak Street." When the assistant offers multiple options, respond: "The second one." When the assistant reads back the resolved full address, say: "Yes, correct." Keep answers concise.'
+evaluations:
+  - structuredOutputId: ff6fa17f-f381-4a88-a97a-ca2828e78548
+    comparator: =
+    value: multiple_match
+    required: true

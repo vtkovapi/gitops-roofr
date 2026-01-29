@@ -1,0 +1,7 @@
+name: "Case 4: Ambiguous address requiring clarification before handoff"
+instructions: "Persona: Cooperative but imprecise homeowner. Goal: New estimate. Steps: Confirm it's a new project, provide name and phone, then give a partial address like '123 Maple, Springfield' without state/ZIP. When asked, first respond with 'I think it's near the high school,' then provide the missing state and ZIP when prompted. Expect the assistant to clarify until the address can be verified before any handoff."
+evaluations:
+  - structuredOutputId: 03c8abc3-7c66-45da-a4f8-2dc611b86e57
+    comparator: =
+    value: true
+    required: true

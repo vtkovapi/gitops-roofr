@@ -1,0 +1,7 @@
+name: "Case 9: Silence and long pause triggers timeout hook"
+instructions: "Persona: Distracted caller. Goal: Undetermined. Steps: Say 'Hi,' then go completely silent for over 90 seconds. Do not respond to any prompts. Expect the assistant to follow the timeout flow, say the scripted closing line, and end the call."
+evaluations:
+  - structuredOutputId: e2f29f25-ec35-4834-acb4-92cf4bc3e3ee
+    comparator: =
+    value: system_error
+    required: true

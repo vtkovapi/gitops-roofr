@@ -1,0 +1,74 @@
+members:
+  - assistantId: everblue-main-agent
+    assistantOverrides:
+      metadata:
+        position:
+          x: 250
+          y: 100
+      tools:append:
+        - type: handoff
+          async: false
+          function:
+            name: handoff_to_EverBlue_Estimate_Agent
+            parameters:
+              type: object
+              required:
+                - contactName
+                - contactPhone
+                - addressId
+              properties:
+                addressId:
+                  type: number
+                  description: The Roofr addressId obtained from resolve_address tool
+                contactName:
+                  type: string
+                  description: Caller's name as collected during intake
+                contactPhone:
+                  type: string
+                  description: Caller's phone number (confirmed or provided)
+            description: |-
+              Silent handoff to Estimate Agent after:
+              1. Caller confirmed this is a NEW project
+              2. Collected name, phone, and address
+              3. Address verified with resolve_address tool
+
+              You MUST pass all collected information as parameters.
+          messages: []
+          destinations:
+            - type: assistant
+              description: Silent handoff to Estimate Agent with caller info
+              assistantName: EverBlue - Estimate Agent
+  - assistantId: everblue-estimate-agent
+    assistantOverrides:
+      metadata:
+        position:
+          x: 650
+          y: 100
+      tools:append:
+        - type: handoff
+          async: false
+          function:
+            name: handoff_to_EverBlue_Main_Agent
+            description: Silent handoff back to Main Agent only if caller has complex questions that require knowledge base lookup. For simple questions (hours, areas, website), answer directly.
+          messages: []
+          destinations:
+            - type: assistant
+              description: Silent handoff back to Main Agent only if caller has complex questions that require knowledge base lookup. For simple questions (hours, areas, website), answer directly.
+              assistantName: EverBlue - Main Agent
+name: EverBlue Voice Squad
+membersOverrides:
+  observabilityPlan:
+    tags:
+      - Roofr
+      - squad-v3
+    provider: langfuse
+  hooks:
+    - do:
+        - type: say
+          exact: I'll be ending the call now. Please feel free to call back anytime. Have a great day!
+        - tool:
+            type: endCall
+          type: tool
+      on: customer.speech.timeout
+      options:
+        timeoutSeconds: 90

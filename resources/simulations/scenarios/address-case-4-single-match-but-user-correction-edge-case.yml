@@ -1,0 +1,7 @@
+name: "Address Case 4: Single Match but User Correction (Edge Case)"
+instructions: 'Persona: Polite user who realizes they misstated the address number. Start with: "123 Main Street, Austin." When the assistant reads back an address, reply: "No, wrong number." Then provide the corrected full address: "125 Main Street, Austin, TX 78701." When read back again, confirm: "Yes, correct."'
+evaluations:
+  - structuredOutputId: ff6fa17f-f381-4a88-a97a-ca2828e78548
+    comparator: =
+    value: single_matched
+    required: true

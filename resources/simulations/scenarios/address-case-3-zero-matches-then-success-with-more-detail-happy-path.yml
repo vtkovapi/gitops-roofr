@@ -1,0 +1,7 @@
+name: "Address Case 3: Zero Matches Then Success with More Detail (Happy Path)"
+instructions: "Persona: Helpful user who initially gives too little info. Start with: \"555 Fake Road.\" When told it couldn't be found, provide: \"555 Fake Road, Austin, TX 78701.\" When the assistant reads back the full address, answer: \"Yes, that's right.\" Avoid adding unrelated info."
+evaluations:
+  - structuredOutputId: ff6fa17f-f381-4a88-a97a-ca2828e78548
+    comparator: =
+    value: single_matched
+    required: true

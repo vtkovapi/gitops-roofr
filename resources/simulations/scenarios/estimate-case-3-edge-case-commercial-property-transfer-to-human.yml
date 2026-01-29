@@ -1,0 +1,7 @@
+name: "Estimate Case 3: Edge Case - Commercial Property Transfer to Human"
+instructions: "Persona: Property manager for a small office building in Seattle seeking pricing. Say yes to estimate, then specify commercial property. Verify the assistant speaks the transfer message ending with the required break/flush, then performs the transfer_call with no spoken text. Do not provide any additional info unless asked before the transfer."
+evaluations:
+  - structuredOutputId: 414ddc83-72eb-4a2f-af03-4be3a079b457
+    comparator: =
+    value: commercial_transfer
+    required: true

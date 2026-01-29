@@ -1,0 +1,7 @@
+name: "Estimate Case 1: Happy Path - Residential, Steep Roof, Near-Term, Email Provided"
+instructions: "Persona: Cooperative homeowner in Seattle wanting a quick ballpark for a steep roof replacement. Say yes to the instant estimate, confirm it's a residential home, timeline is in the next few months, and roof is very steep. Provide a realistic email (e.g., alex@example.com). After the estimate is read, ask about their business hours, then say no to additional questions and allow the call to close."
+evaluations:
+  - structuredOutputId: 414ddc83-72eb-4a2f-af03-4be3a079b457
+    comparator: =
+    value: provided
+    required: true

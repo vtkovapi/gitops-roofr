@@ -10,10 +10,9 @@ model:
   model: gpt-4.1-mini
   provider: openai
   temperature: 0
-assistantIds:
+target: messages
+assistant_ids:
   - 06540183-4c2c-4d54-8853-0a2b3f4feb90
   - 5b4c0e8e-56d7-44d7-8153-326570a04cd3
   - 633ab678-1ca9-4722-ab65-9bb1e519db1f
   - 1e7f057c-d984-409d-9a94-75f722e3a581
-workflowIds: []
-target: messages

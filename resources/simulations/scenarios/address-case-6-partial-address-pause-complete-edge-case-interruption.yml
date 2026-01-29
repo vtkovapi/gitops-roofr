@@ -1,0 +1,7 @@
+name: "Address Case 6: Partial Address, Pause, Complete (Edge Case Interruption)"
+instructions: "Persona: Distracted caller with background noise. First say: \"It's 742 Evergreen...\" then pause silently for 10–15 seconds (simulate interruption). After the assistant prompts again, provide the full address: \"742 Evergreen Terrace, Springfield, IL.\" When read back, confirm: \"Yes, correct.\""
+evaluations:
+  - structuredOutputId: ff6fa17f-f381-4a88-a97a-ca2828e78548
+    comparator: =
+    value: multiple_matched
+    required: true

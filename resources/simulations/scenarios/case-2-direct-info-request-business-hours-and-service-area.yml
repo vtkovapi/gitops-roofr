@@ -1,0 +1,7 @@
+name: "Case 2: Direct info request: business hours and service area"
+instructions: "Persona: Curious shopper comparing companies. Goal: Quickly learn hours and if their area is covered. Steps: Ask, 'What are your hours today?' then ask 'Do you service Walnut Creek, CA?' and 'What's your website?' Do not ask complex questions. Expect direct answers without any handoff."
+evaluations:
+  - structuredOutputId: 03c8abc3-7c66-45da-a4f8-2dc611b86e57
+    comparator: =
+    value: true
+    required: true
