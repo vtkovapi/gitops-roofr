@@ -19,7 +19,8 @@
     "transfer-call": "e2f29f25-ec35-4834-acb4-92cf4bc3e3ee",
     "success-evaluation-pass-fail": "03c8abc3-7c66-45da-a4f8-2dc611b86e57",
     "qa-address-found": "ff6fa17f-f381-4a88-a97a-ca2828e78548",
-    "call-summary": "76f729d8-ea01-4105-841b-de9282032065"
+    "call-summary": "76f729d8-ea01-4105-841b-de9282032065",
+    "guardrails-compliance": "d715393a-5070-4465-9865-82cb69991ea1"
   },
   "tools": {
     "resource-a98a8455": "a98a8455-77e6-414d-980f-02f88350ddf6",
@@ -32,14 +33,15 @@
     "everblue-voice-squad": "20374c37-4125-4e23-9914-5d916f3bf7a2"
   },
   "personalities": {
-    "skeptical-sam": "a0000000-0000-4000-8000-000000000004",
-    "impatient-irene": "a0000000-0000-4000-8000-000000000002",
-    "rambling-roger": "a0000000-0000-4000-8000-000000000003",
-    "emotional-eva": "a0000000-0000-4000-8000-000000000007",
-    "multitasking-maya": "a0000000-0000-4000-8000-000000000005",
-    "decisive-derek": "a0000000-0000-4000-8000-000000000006",
-    "confused-carl": "a0000000-0000-4000-8000-000000000001",
-    "quick-tester": "506dcdd3-7110-4dcd-be2d-4360b53f2a11"
+    "quick-tester": "506dcdd3-7110-4dcd-be2d-4360b53f2a11",
+    "confused-carl": "ebfbc810-fc7a-4ea0-baf7-197c4f26bff3",
+    "decisive-derek": "0116d4c4-e5d4-459b-9e3f-889db451f958",
+    "emotional-eva": "d03b9f99-9f69-450c-8f31-7a5ee61e0c56",
+    "impatient-irene": "7acb63aa-a869-42c1-9ecc-9992eb802441",
+    "manipulative-mike": "58d7d44b-e03e-4bf2-919d-81fc39878d2e",
+    "multitasking-maya": "b5d54312-b41c-46aa-af1d-3339d6c0b742",
+    "rambling-roger": "fb2505f6-5d0b-40bf-9904-989496091ed9",
+    "skeptical-sam": "b6a3998a-6332-4dee-a8bb-75827a5f6c00"
   },
   "scenarios": {
     "estimate-case-6-failure-mode-push-for-exact-price-and-decimal-reading": "aaf7ef4e-b463-4e86-87c0-8305c00dcadb",
@@ -65,7 +67,10 @@
     "address-case-4-single-match-but-user-correction-edge-case": "78aace9e-10f7-4666-8885-be674eef0cf3",
     "address-case-3-zero-matches-then-success-with-more-detail-happy-path": "a2fbc9fc-0a2e-429e-872a-0b4596e42cb4",
     "address-case-2-multiple-matches-select-by-position-happy-path": "87ac3e59-0517-463e-9a85-ac6b346dcdae",
-    "address-case-1-single-match-immediate-success-with-full-address": "b1bc2bf6-2c8e-4b2d-ba79-8c62abb44977"
+    "address-case-1-single-match-immediate-success-with-full-address": "b1bc2bf6-2c8e-4b2d-ba79-8c62abb44977",
+    "guardrails-case-1-professional-advice-boundary": "a3bc1b61-9925-4b92-b3b9-9afafdc4d97a",
+    "guardrails-case-2-prompt-extraction-and-jailbreak": "2b40d3c2-91ed-4104-97d9-f5f9ddc460d0",
+    "guardrails-case-3-off-topic-and-fabrication": "8d6203a2-bedb-48e6-85c1-87d8f72fe7e0"
   },
   "simulations": {
     "estimate-case-6": "cf9bcc6e-5d82-464e-9f00-7440ac7abdc6",
@@ -91,11 +96,15 @@
     "address-scenario-4": "ffbce574-672c-4937-9b6c-8875d548fc82",
     "address-scenario-3": "4b6c6100-1570-4c33-9413-86e5e2ec14e1",
     "address-scenario-2": "8bac47e6-77db-40aa-b59f-a56a7de03170",
-    "address-scenario-1": "fb68e1dc-edac-4a66-a1ea-eff21a274d58"
+    "address-scenario-1": "fb68e1dc-edac-4a66-a1ea-eff21a274d58",
+    "guardrails-case-1": "9ddc46cd-e4a5-421b-9c21-530c5ab6e4ff",
+    "guardrails-case-2": "cedce7ab-b431-45f5-83bf-d3bfbb9c1274",
+    "guardrails-case-3": "e52bba0e-364b-419a-8318-2c45ff8f80a2"
   },
   "simulationSuites": {
     "estimate-test": "0eb04a0e-b4f0-45e6-955f-abf9cc1deb4c",
     "everblue-squad-test": "5b5c8c22-750f-4c98-8ff6-e56fc6674013",
-    "address-resolution": "6aaf3146-a199-45e5-933c-bbf1fa3eff45"
+    "address-resolution": "6aaf3146-a199-45e5-933c-bbf1fa3eff45",
+    "guardrails-test": "6fe12fbe-8412-4489-acd0-5ba07f6b6a4f"
   }
 }
