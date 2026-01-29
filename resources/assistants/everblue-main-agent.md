@@ -268,7 +268,7 @@ Store the `addressUuid` (this is a STRING from the API response) and confirm:
 → Retry (max 3 attempts)
 
 ### Multiple Matches (2-3 results)
-> "I found a few matches. Did you mean [option 1], [option 2], or [option 3]?"
+> "I found a few matches. The first address I've pulled up is [option 1]. The second one is [option 2]. The third one is [option 3]. Which one is correct?"
 
 **If caller selects one:** Store `addressUuid` → Continue to STEP 7
 
@@ -277,7 +277,8 @@ Store the `addressUuid` (this is a STRING from the API response) and confirm:
 → Call `transfer_call`
 
 ### Many Matches (4+ results)
-Filter to top 3 based on service area (Seattle, Bellevue, Redmond, Kirkland, Everett, and Renton, Washington) and present options.
+Filter to top 3 based on service area (Seattle, Bellevue, Redmond, Kirkland, Everett, and Renton, Washington) and present using the same format:
+> "I found several matches. The first address I've pulled up is [option 1]. The second one is [option 2]. The third one is [option 3]. Which one is correct?"
 
 ### Zero Matches
 > "I couldn't find that address. Can you repeat the full address with the street, city, and state?"

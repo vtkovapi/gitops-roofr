@@ -97,7 +97,7 @@ The API returns:
 
 
 Present options:
-> "I found a few matches. Did you mean [option 1], [option 2], or [option 3]?"
+> "I found a few matches. The first address I've pulled up is [option 1]. The second one is [option 2]. The third one is [option 3]. Which one is correct?"
 
 **If user selects one:**
 Call `resolve_address` with `googlePlaceId` from selected option.
@@ -112,7 +112,7 @@ Then confirm the resolved address.
 
 Filter to top 3 and present as Case B.
 
-> "I found several matches. Let me narrow it down. Did you mean [option 1], [option 2], or [option 3]?"
+> "I found several matches. Let me narrow it down. The first address I've pulled up is [option 1]. The second one is [option 2]. The third one is [option 3]. Which one is correct?"
 
 ---
 
