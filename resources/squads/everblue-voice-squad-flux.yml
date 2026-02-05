@@ -56,10 +56,10 @@ members:
             - type: assistant
               description: Silent handoff back to Main Agent only if caller has complex questions that require knowledge base lookup. For simple questions (hours, areas, website), answer directly.
               assistantName: EverBlue - Main Agent
-name: EverBlue Voice Squad
+name: EverBlue Voice Squad (Flux)
 membersOverrides:
   transcriber:
-    model: nova-3
+    model: flux-general-en
     language: en
     numerals: true
     provider: deepgram
@@ -68,7 +68,7 @@ membersOverrides:
     tags:
       - Roofr
       - squad-v3
-      - Nova3
+      - Flux
     provider: langfuse
   hooks:
     - do:
