@@ -1,4 +1,4 @@
-name: QA Address Found
+name: qa_address_found
 type: ai
 description: Check if the address has been successfully found by the assistant during the call
 schema:
@@ -21,5 +21,5 @@ model:
   temperature: 0
 target: messages
 assistant_ids:
-  - 633ab678-1ca9-4722-ab65-9bb1e519db1f
-  - 1e7f057c-d984-409d-9a94-75f722e3a581
+  - everblue-main-agent
+  - everblue-estimate-agent

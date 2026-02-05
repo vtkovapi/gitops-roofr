@@ -1,4 +1,4 @@
-name: Success Evaluation - Pass/Fail
+name: success_evaluation
 type: ai
 description: Binary success evaluation determining if the call met its objectives
 schema:
@@ -13,5 +13,5 @@ model:
   temperature: 0
 target: messages
 assistant_ids:
-  - 633ab678-1ca9-4722-ab65-9bb1e519db1f
-  - 1e7f057c-d984-409d-9a94-75f722e3a581
+  - everblue-main-agent
+  - everblue-estimate-agent

@@ -1,4 +1,4 @@
-name: Transfer Call
+name: transfer_call
 type: ai
 description: Determine if and why the call was transferred to a human
 schema:
@@ -34,5 +34,5 @@ model:
   temperature: 0
 target: messages
 assistant_ids:
-  - 633ab678-1ca9-4722-ab65-9bb1e519db1f
-  - 1e7f057c-d984-409d-9a94-75f722e3a581
+  - everblue-main-agent
+  - everblue-estimate-agent
