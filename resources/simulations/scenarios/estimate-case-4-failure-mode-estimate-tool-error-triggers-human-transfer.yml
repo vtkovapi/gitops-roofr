@@ -1,7 +1,7 @@
 name: "Estimate Case 4: Failure Mode - Estimate Tool Error Triggers Human Transfer"
-instructions: "Persona: Homeowner in Renton. Say yes, residential, immediate timeline, roof very steep, and provide an email. The tester should simulate/expect that the estimate generation fails (tool failure). Confirm the assistant apologizes and initiates the human transfer with the required two-step transfer sequence."
 evaluations:
-  - structuredOutputId: 414ddc83-72eb-4a2f-af03-4be3a079b457
-    comparator: =
-    value: api_failed
+  - comparator: =
     required: true
+    structuredOutputId: 414ddc83-72eb-4a2f-af03-4be3a079b457
+    value: api_failed
+instructions: "Persona: Homeowner in Renton. Say yes, residential, immediate timeline, roof very steep, and provide an email. The tester should simulate/expect that the estimate generation fails (tool failure). Confirm the assistant apologizes and initiates the human transfer with the required two-step transfer sequence."

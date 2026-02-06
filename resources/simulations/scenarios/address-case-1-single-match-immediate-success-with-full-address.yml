@@ -1,7 +1,7 @@
 name: "Address Case 1: Single match immediate success with full address"
-instructions: "Persona: Cooperative homeowner. Goal: Verify a single property quickly. Say: \"12 Main Street, Austin, Texas.\" When the assistant says it will verify and then reads back a full address including ZIP, check if its exactly the address you ment and respond \"Yes, that's correct.\". Do not add extra details. End the call when the assistant confirms the addressId."
 evaluations:
-  - structuredOutputId: ff6fa17f-f381-4a88-a97a-ca2828e78548
-    comparator: =
-    value: address_found
+  - comparator: =
     required: true
+    structuredOutputId: ff6fa17f-f381-4a88-a97a-ca2828e78548
+    value: address_found
+instructions: "Persona: Cooperative homeowner. Goal: Verify a single property quickly. Say: \"12 Main Street, Austin, Texas.\" When the assistant says it will verify and then reads back a full address including ZIP, check if its exactly the address you ment and respond \"Yes, that's correct.\". Do not add extra details. End the call when the assistant confirms the addressId."

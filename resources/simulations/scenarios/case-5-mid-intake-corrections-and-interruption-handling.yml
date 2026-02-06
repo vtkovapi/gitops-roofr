@@ -1,7 +1,7 @@
 name: "Case 5: Mid-intake corrections and interruption handling"
-instructions: "Persona: Busy caller in a car. Goal: New estimate. Steps: Confirm it's a new project. Provide name, then interrupt while the assistant is speaking with 'Sorry, my phone number is actually 415-555-0188, not 415-555-0180.' Later, correct the street number from 860 to 806 before verification. Expect the assistant to gracefully handle interruptions, confirm the latest info, and proceed to address verification and handoff."
 evaluations:
-  - structuredOutputId: 03c8abc3-7c66-45da-a4f8-2dc611b86e57
-    comparator: =
-    value: true
+  - comparator: =
     required: true
+    structuredOutputId: 03c8abc3-7c66-45da-a4f8-2dc611b86e57
+    value: true
+instructions: "Persona: Busy caller in a car. Goal: New estimate. Steps: Confirm it's a new project. Provide name, then interrupt while the assistant is speaking with 'Sorry, my phone number is actually 415-555-0188, not 415-555-0180.' Later, correct the street number from 860 to 806 before verification. Expect the assistant to gracefully handle interruptions, confirm the latest info, and proceed to address verification and handoff."

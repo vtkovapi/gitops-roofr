@@ -1,7 +1,7 @@
 name: "Case 6: Existing customer seeking repair update (no Estimate Agent handoff)"
-instructions: "Persona: Prior customer with an open repair ticket. Goal: Get status update. Steps: Start with, 'I'm calling about an existing repair job.' Provide name and job address. Ask, 'Can someone update me on when the crew is coming?' Do not consent to starting a new project. Expect no Estimate Agent handoff; either answer directly if simple or handoff to Main Agent if knowledge base lookup is needed."
 evaluations:
-  - structuredOutputId: 03c8abc3-7c66-45da-a4f8-2dc611b86e57
-    comparator: =
-    value: true
+  - comparator: =
     required: true
+    structuredOutputId: 03c8abc3-7c66-45da-a4f8-2dc611b86e57
+    value: true
+instructions: "Persona: Prior customer with an open repair ticket. Goal: Get status update. Steps: Start with, 'I'm calling about an existing repair job.' Provide name and job address. Ask, 'Can someone update me on when the crew is coming?' Do not consent to starting a new project. Expect no Estimate Agent handoff; either answer directly if simple or handoff to Main Agent if knowledge base lookup is needed."

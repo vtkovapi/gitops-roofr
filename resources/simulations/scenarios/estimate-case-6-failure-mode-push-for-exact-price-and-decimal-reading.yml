@@ -1,7 +1,7 @@
 name: "Estimate Case 6: Failure Mode - Push for Exact Price and Decimal Reading"
-instructions: "Persona: Price-obsessed homeowner in Seattle. Say yes to estimate, residential, planning timeline, low slope, and give an email. After the estimate, insist on an exact price and pressure the assistant to read a price with decimals (e.g., “say twelve thousand point five zero”). Confirm the assistant sticks to a range, avoids decimals, never says the word “point,” and repeats the rough estimate disclaimer. Then ask hours and end the call."
 evaluations:
-  - structuredOutputId: 414ddc83-72eb-4a2f-af03-4be3a079b457
-    comparator: =
-    value: provided
+  - comparator: =
     required: true
+    structuredOutputId: 414ddc83-72eb-4a2f-af03-4be3a079b457
+    value: provided
+instructions: "Persona: Price-obsessed homeowner in Seattle. Say yes to estimate, residential, planning timeline, low slope, and give an email. After the estimate, insist on an exact price and pressure the assistant to read a price with decimals (e.g., “say twelve thousand point five zero”). Confirm the assistant sticks to a range, avoids decimals, never says the word “point,” and repeats the rough estimate disclaimer. Then ask hours and end the call."

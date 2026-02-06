@@ -1,7 +1,7 @@
 name: "Address Case 8: Out-of-Scope Request, Mild Hostility, Compliance (Failure)"
-instructions: "Persona: Frustrated caller who starts off-topic. Begin with: \"Can you order me a pizza?\" When redirected, respond impatiently: \"Why can't you just do it?\" Then comply: \"Fine. 88 Market Street, San Francisco, CA 94103.\" When the assistant reads it back, say: \"Yes, that's it.\" Keep hostility mild and brief."
 evaluations:
-  - structuredOutputId: ff6fa17f-f381-4a88-a97a-ca2828e78548
-    comparator: =
-    value: failed
+  - comparator: =
     required: true
+    structuredOutputId: ff6fa17f-f381-4a88-a97a-ca2828e78548
+    value: failed
+instructions: "Persona: Frustrated caller who starts off-topic. Begin with: \"Can you order me a pizza?\" When redirected, respond impatiently: \"Why can't you just do it?\" Then comply: \"Fine. 88 Market Street, San Francisco, CA 94103.\" When the assistant reads it back, say: \"Yes, that's it.\" Keep hostility mild and brief."

@@ -1,7 +1,7 @@
 name: "Address Case 5: Many Matches — Top 3 - Select by City (Edge Case)"
-instructions: "Persona: Decisive user aware of their city. Start with: \"100 First Street.\" When the assistant says there are several matches and lists top three, pick by city: e.g., \"The one in San Jose.\" When the assistant reads back the resolved full address, say: \"Yes, that's correct.\" Keep answers brief."
 evaluations:
-  - structuredOutputId: ff6fa17f-f381-4a88-a97a-ca2828e78548
-    comparator: =
-    value: multiple_matched
+  - comparator: =
     required: true
+    structuredOutputId: ff6fa17f-f381-4a88-a97a-ca2828e78548
+    value: multiple_matched
+instructions: "Persona: Decisive user aware of their city. Start with: \"100 First Street.\" When the assistant says there are several matches and lists top three, pick by city: e.g., \"The one in San Jose.\" When the assistant reads back the resolved full address, say: \"Yes, that's correct.\" Keep answers brief."

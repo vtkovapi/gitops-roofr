@@ -1,7 +1,7 @@
 name: "Address Case 9: Tool Failure/Timeout, Recovery (Failure)"
-instructions: 'Persona: Patient user; simulate a back-end hiccup. Start with: "1600 Pennsylvania Ave NW, Washington, DC 20500." If there’s any delay or error message, respond calmly with: "No worries, please try again." On successful read-back, say: "Yes, correct." Do not change the address or add details.'
 evaluations:
-  - structuredOutputId: ff6fa17f-f381-4a88-a97a-ca2828e78548
-    comparator: =
-    value: failed
+  - comparator: =
     required: true
+    structuredOutputId: ff6fa17f-f381-4a88-a97a-ca2828e78548
+    value: failed
+instructions: 'Persona: Patient user; simulate a back-end hiccup. Start with: "1600 Pennsylvania Ave NW, Washington, DC 20500." If there’s any delay or error message, respond calmly with: "No worries, please try again." On successful read-back, say: "Yes, correct." Do not change the address or add details.'
