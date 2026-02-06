@@ -1,3 +1,4 @@
+name: EverBlue Voice Squad (Flux)
 members:
   - assistantId: everblue-main-agent
     assistantOverrides:
@@ -6,26 +7,13 @@ members:
           x: 250
           y: 100
       tools:append:
-        - type: handoff
-          async: false
+        - async: false
+          destinations:
+            - assistantName: EverBlue - Estimate Agent
+              description: Silent handoff to Estimate Agent with caller info
+              type: assistant
           function:
             name: handoff_to_EverBlue_Estimate_Agent
-            parameters:
-              type: object
-              required:
-                - contactName
-                - contactPhone
-                - addressUuid
-              properties:
-                addressUuid:
-                  type: string
-                  description: The Roofr addressUuid obtained from resolve_address tool (UUID v7 format, e.g., "172631c8-8230-4de0-8c83-92d07d5014f7")
-                contactName:
-                  type: string
-                  description: Caller's name as collected during intake
-                contactPhone:
-                  type: string
-                  description: Caller's phone number in E.164 format (e.g., "+12065551234")
             description: |-
               Silent handoff to Estimate Agent after:
               1. Caller confirmed this is a NEW project
@@ -34,11 +22,24 @@ members:
 
               You MUST pass all collected information as parameters.
               IMPORTANT: addressUuid is a UUID string - pass it exactly as received, do not parse as number.
+            parameters:
+              properties:
+                addressUuid:
+                  description: The Roofr addressUuid obtained from resolve_address tool (UUID v7 format, e.g., "172631c8-8230-4de0-8c83-92d07d5014f7")
+                  type: string
+                contactName:
+                  description: Caller's name as collected during intake
+                  type: string
+                contactPhone:
+                  description: Caller's phone number in E.164 format (e.g., "+12065551234")
+                  type: string
+              required:
+                - contactName
+                - contactPhone
+                - addressUuid
+              type: object
           messages: []
-          destinations:
-            - type: assistant
-              description: Silent handoff to Estimate Agent with caller info
-              assistantName: EverBlue - Estimate Agent
+          type: handoff
   - assistantId: everblue-estimate-agent
     assistantOverrides:
       metadata:
@@ -46,44 +47,43 @@ members:
           x: 650
           y: 100
       tools:append:
-        - type: handoff
-          async: false
+        - async: false
+          destinations:
+            - assistantName: EverBlue - Main Agent
+              description: Silent handoff back to Main Agent only if caller has complex questions that require knowledge base lookup. For simple questions (hours, areas, website), answer directly.
+              type: assistant
           function:
             name: handoff_to_EverBlue_Main_Agent
             description: Silent handoff back to Main Agent only if caller has complex questions that require knowledge base lookup. For simple questions (hours, areas, website), answer directly.
           messages: []
-          destinations:
-            - type: assistant
-              description: Silent handoff back to Main Agent only if caller has complex questions that require knowledge base lookup. For simple questions (hours, areas, website), answer directly.
-              assistantName: EverBlue - Main Agent
-name: EverBlue Voice Squad (Flux)
+          type: handoff
 membersOverrides:
-  transcriber:
-    model: flux-general-en
-    language: en
-    numerals: true
-    provider: deepgram
-    confidenceThreshold: 0.5
-  observabilityPlan:
-    tags:
-      - Roofr
-      - squad-v3
-      - Flux
-    provider: langfuse
   hooks:
     - do:
-        - type: say
-          exact: I'm sorry, I didn't quite catch that. Could you please repeat?
+        - exact: I'm sorry, I didn't quite catch that. Could you please repeat?
+          type: say
       on: assistant.transcriber.endpointedSpeechLowConfidence
       options:
         confidenceMax: 0.49
         confidenceMin: 0.2
     - do:
-        - type: say
-          exact: I'll be ending the call now. Please feel free to call back anytime. Have a great day!
+        - exact: I'll be ending the call now. Please feel free to call back anytime. Have a great day!
+          type: say
         - tool:
             type: endCall
           type: tool
       on: customer.speech.timeout
       options:
         timeoutSeconds: 90
+  observabilityPlan:
+    provider: langfuse
+    tags:
+      - Roofr
+      - squad-v3
+      - Flux
+  transcriber:
+    confidenceThreshold: 0.5
+    language: en
+    model: flux-general-en
+    numerals: true
+    provider: deepgram
