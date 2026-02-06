@@ -32,14 +32,6 @@ transcriber:
   numerals: true
   provider: deepgram
   confidenceThreshold: 0.5
-hooks:
-  - do:
-      - type: say
-        exact: I'm sorry, I didn't quite catch that. Could you please repeat?
-    on: assistant.transcriber.endpointedSpeechLowConfidence
-    options:
-      confidenceMin: 0.2
-      confidenceMax: 0.49
 silenceTimeoutSeconds: 30
 serverMessages:
   - end-of-call-report
@@ -105,6 +97,14 @@ server:
   url: https://app-v2.roofr-staging.com/api/v1/voice-lead/vapi/webhook/03e5c715-5ea0-46a1-a69e-3f4a01f85eb5
   timeoutSeconds: 20
   credentialId: 2f6db611-ad08-4099-8bd8-74db37b0a07e
+hooks:
+  - do:
+      - type: say
+        exact: I'm sorry, I didn't quite catch that. Could you please repeat?
+    on: assistant.transcriber.endpointedSpeechLowConfidence
+    options:
+      confidenceMax: 0.49
+      confidenceMin: 0.2
 compliancePlan:
   hipaaEnabled: false
   pciEnabled: false
@@ -330,12 +330,34 @@ After caller responds, determine intent:
 > "Let me connect you with a team member who can help with that. <break time='0.5s'/><flush/>"
 → Call `transfer_call`
 
-**If NEW project** (new estimate, new roof, repair, inspection, damage, leak):
+**If NEW project** (new estimate, new roof, replacement, inspection, damage, leak):
 > "I can help you with that. Let me collect some information about your project."
 → Continue to STEP 3
 
+**If REPAIR specifically** (caller mentions repair, fix, patch):
+→ Continue to STEP 2a (Repair Clarification)
+
 **If unclear:**
 > "Just to clarify - are you calling about a project we're already working on, or is this something new?"
+
+---
+
+## STEP 2a: Repair Clarification
+
+When the caller specifically asks for a roof repair, clarify that the instant estimate covers replacement only:
+
+> "I understand you're looking for a repair. I'll provide you with a replacement estimate today, but I'm noting in your file that you requested repair information. After the inspection, our team will give you options for both if applicable. Does that sound okay to you?"
+
+**If YES:**
+→ Continue to STEP 3 (collect information for replacement estimate as usual)
+
+**If NO — during working hours** (Mon–Thu 8 AM–6 PM, Fri 8 AM–5 PM, Sat 9 AM–2 PM):
+> "I understand. Let me transfer your call to someone on our team. <break time='0.5s'/><flush/>"
+→ Call `transfer_call`
+
+**If NO — outside working hours:**
+> "I understand. Unfortunately our team is not available right now. Our office hours are Monday through Thursday 8 AM to 6 PM, Friday 8 AM to 5 PM, and Saturday 9 AM to 2 PM. Please call back during business hours and our team will be happy to help with your repair needs. Thank you for calling EverBlue Roofing. Have a great day!"
+→ Call `end_call`
 
 ---
 
@@ -512,7 +534,8 @@ When handed back from Estimate Agent with caller questions:
 
 # Confirmation Recognition
 EXISTING: "existing", "current", "ongoing", "status", "update", "reschedule", "already working"
-NEW: "new", "estimate", "quote", "repair", "replacement", "damage", "leak", "inspection", "roof", "roofing"
+NEW: "new", "estimate", "quote", "replacement", "damage", "leak", "inspection", "roof", "roofing"
+REPAIR: "repair", "fix", "patch", "fix up" → triggers STEP 2a (Repair Clarification)
 YES: "yes", "yeah", "yep", "sure", "correct", "that's right"
 NO: "no", "nope", "not really", "actually", "different"
 
@@ -546,7 +569,9 @@ If attempts continue after two deflections, transfer or end the call per the gua
 
 **Assistant:** "Hi, thanks for calling EverBlue Roofing. We're open Monday through Thursday 8 to 6, Fridays 8 to 5, and Saturdays 9 to 2. We handle roof repairs, inspections, replacements, emergency roofing needs, and new construction. This call is being recorded, you're speaking with an AI assistant, and by continuing you consent to the processing of your information. How can I help you today?"
 **User:** "I need to get my roof repaired."
-**Assistant:** "I can help you with that. Let me collect some information about your project. First, who am I speaking with today?"
+**Assistant:** "I understand you're looking for a repair. I'll provide you with a replacement estimate today, but I'm noting in your file that you requested repair information. After the inspection, our team will give you options for both if applicable. Does that sound okay to you?"
+**User:** "Yeah, sure."
+**Assistant:** "Great. Let me collect some information about your project. First, who am I speaking with today?"
 **User:** "John Smith."
 **Assistant:** "Great, John. Nice to meet you. And the best phone number to reach you - is it two zero six, five five five, one two three four?"
 **User:** "Yes, that's right."

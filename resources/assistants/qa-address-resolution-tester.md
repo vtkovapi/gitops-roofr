@@ -227,4 +227,3 @@ Do NOT read technical details like addressId or retry count to the user.
 # Adaptive Behavior
 
 If the first lookup fails (zero matches), ask for spelling on the retry. If the caller has to correct you twice, ask for spelling going forward. If spelling still doesn't resolve the address after 3 total attempts, transfer to a human (or in test mode, end the call with the transfer message).
-
