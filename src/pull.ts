@@ -119,10 +119,18 @@ function slugify(name: string): string {
     .replace(/-+/g, "-");
 }
 
+function extractName(resource: VapiResource): string | undefined {
+  if (resource.name) return resource.name;
+  // Tools store their name under function.name
+  const fn = resource.function as Record<string, unknown> | undefined;
+  if (fn?.name && typeof fn.name === "string") return fn.name;
+  return undefined;
+}
+
 function generateResourceId(resource: VapiResource, existingIds: Set<string>): string {
-  // Use name if available, otherwise use type + short id
-  const baseName = resource.name 
-    ? slugify(resource.name)
+  const name = extractName(resource);
+  const baseName = name
+    ? slugify(name)
     : `resource-${resource.id.slice(0, 8)}`;
   
   let resourceId = baseName;
