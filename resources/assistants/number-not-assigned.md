@@ -1,28 +1,28 @@
 ---
 name: Number not assigned.
-voice:
-  voiceId: Tara
-  provider: vapi
-model:
-  model: gpt-4o
-  toolIds:
-    - resource-8102e715
-  provider: openai
-firstMessage: This number is currently not assigned to any Roofr Voice application. If this is an error please reach out to our support team for assistance. Goodbye!
-voicemailMessage: Please call back when you're available.
-endCallFunctionEnabled: true
-endCallMessage: Goodbye.
-transcriber:
-  model: flux-general-en
-  language: en
-  provider: deepgram
-silenceTimeoutSeconds: 10
-maxDurationSeconds: 10
 analysisPlan:
-  summaryPlan:
-    enabled: false
   successEvaluationPlan:
     enabled: false
+  summaryPlan:
+    enabled: false
+endCallFunctionEnabled: true
+endCallMessage: Goodbye.
+firstMessage: This number is currently not assigned to any Roofr Voice application. If this is an error please reach out to our support team for assistance. Goodbye!
+maxDurationSeconds: 10
+model:
+  model: gpt-4o
+  provider: openai
+  toolIds:
+    - resource-8102e715
+silenceTimeoutSeconds: 10
+transcriber:
+  language: en
+  model: flux-general-en
+  provider: deepgram
+voice:
+  provider: vapi
+  voiceId: Tara
+voicemailMessage: Please call back when you're available.
 ---
 
 [Identity]  

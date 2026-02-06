@@ -1,20 +1,6 @@
 ---
 name: Riley
-voice:
-  voiceId: Elliot
-  provider: vapi
-model:
-  model: gpt-4o
-  provider: openai
-  temperature: 0.5
-firstMessage: Thank you for calling Wellness Partners. This is Riley, your scheduling assistant. How may I help you today?
-voicemailMessage: Hello, this is Riley from Wellness Partners. I'm calling about your appointment. Please call us back at your earliest convenience so we can confirm your scheduling details.
-endCallMessage: Thank you for scheduling with Wellness Partners. Your appointment is confirmed, and we look forward to seeing you soon. Have a wonderful day!
-transcriber:
-  model: nova-3
-  language: en
-  provider: deepgram
-  endpointing: 150
+backgroundDenoisingEnabled: false
 clientMessages:
   - conversation-update
   - function-call
@@ -29,6 +15,16 @@ clientMessages:
   - voice-input
   - workflow.node.started
   - assistant.started
+endCallMessage: Thank you for scheduling with Wellness Partners. Your appointment is confirmed, and we look forward to seeing you soon. Have a wonderful day!
+endCallPhrases:
+  - goodbye
+  - talk to you soon
+firstMessage: Thank you for calling Wellness Partners. This is Riley, your scheduling assistant. How may I help you today?
+hipaaEnabled: false
+model:
+  model: gpt-4o
+  provider: openai
+  temperature: 0.5
 serverMessages:
   - conversation-update
   - end-of-call-report
@@ -41,14 +37,18 @@ serverMessages:
   - handoff-destination-request
   - user-interrupted
   - assistant.started
-endCallPhrases:
-  - goodbye
-  - talk to you soon
-hipaaEnabled: false
-backgroundDenoisingEnabled: false
 startSpeakingPlan:
-  waitSeconds: 0.4
   smartEndpointingEnabled: livekit
+  waitSeconds: 0.4
+transcriber:
+  endpointing: 150
+  language: en
+  model: nova-3
+  provider: deepgram
+voice:
+  provider: vapi
+  voiceId: Elliot
+voicemailMessage: Hello, this is Riley from Wellness Partners. I'm calling about your appointment. Please call us back at your earliest convenience so we can confirm your scheduling details.
 ---
 
 # Appointment Scheduling Agent Prompt

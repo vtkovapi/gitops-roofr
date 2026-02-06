@@ -1,42 +1,42 @@
 ---
 name: Santa Reporting Line
-voice:
-  model: eleven_turbo_v2_5
-  speed: 1
-  style: 0.3
-  voiceId: Gqe8GJJLg3haJkTwYj2L
-  autoMode: true
-  provider: 11labs
-  stability: 0.5
-  similarityBoost: 0.75
-  useSpeakerBoost: true
-  optimizeStreamingLatency: 3
-model:
-  model: gpt-4.1-nano
-  provider: openai
-firstMessage: Ho Ho Ho, Naughty List Hotline. Santa Speaking.
-voicemailMessage: Please call back when you're available.
-endCallFunctionEnabled: true
-endCallMessage: Goodbye.
-transcriber:
-  model: flux-general-en
-  language: en
-  numerals: false
-  provider: deepgram
-  confidenceThreshold: 0.4
-backgroundSound: https://roofr-techops-assets-public.roofr.com/christmas/santa-workshop.mp3
 analysisPlan:
-  summaryPlan:
-    enabled: false
   successEvaluationPlan:
     enabled: false
-backgroundDenoisingEnabled: true
+  summaryPlan:
+    enabled: false
 artifactPlan:
   structuredOutputIds:
     - call-summary
+backgroundDenoisingEnabled: true
+backgroundSound: https://roofr-techops-assets-public.roofr.com/christmas/santa-workshop.mp3
 compliancePlan:
   hipaaEnabled: false
   pciEnabled: false
+endCallFunctionEnabled: true
+endCallMessage: Goodbye.
+firstMessage: Ho Ho Ho, Naughty List Hotline. Santa Speaking.
+model:
+  model: gpt-4.1-nano
+  provider: openai
+transcriber:
+  confidenceThreshold: 0.4
+  language: en
+  model: flux-general-en
+  numerals: false
+  provider: deepgram
+voice:
+  autoMode: true
+  model: eleven_turbo_v2_5
+  optimizeStreamingLatency: 3
+  provider: 11labs
+  similarityBoost: 0.75
+  speed: 1
+  stability: 0.5
+  style: 0.3
+  useSpeakerBoost: true
+  voiceId: Gqe8GJJLg3haJkTwYj2L
+voicemailMessage: Please call back when you're available.
 ---
 
 [Identity]  

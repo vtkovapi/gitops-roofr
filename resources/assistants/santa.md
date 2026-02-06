@@ -1,39 +1,39 @@
 ---
 name: Santa
-voice:
-  model: eleven_turbo_v2_5
-  speed: 1
-  style: 0.3
-  voiceId: Gqe8GJJLg3haJkTwYj2L
-  autoMode: true
-  provider: 11labs
-  stability: 0.5
-  similarityBoost: 0.75
-  useSpeakerBoost: true
-  optimizeStreamingLatency: 3
-model:
-  model: gpt-4.1-nano
-  provider: openai
-firstMessage: Ho, ho, ho! Merry Christmas! Oh, how lovely... a call all the way to the North Pole. I was just having some cocoa by the fire. Now then... who do I have the pleasure of speaking with?
-voicemailMessage: Please call back when you're available.
-endCallFunctionEnabled: true
-endCallMessage: Goodbye.
-transcriber:
-  model: scribe_v1
-  language: en
-  provider: 11labs
-backgroundSound: https://roofr-techops-assets-public.roofr.com/christmas/santa-workshop.mp3
 analysisPlan:
-  summaryPlan:
-    enabled: false
   successEvaluationPlan:
+    enabled: false
+  summaryPlan:
     enabled: false
 artifactPlan:
   structuredOutputIds:
     - call-summary
+backgroundSound: https://roofr-techops-assets-public.roofr.com/christmas/santa-workshop.mp3
 compliancePlan:
   hipaaEnabled: false
   pciEnabled: false
+endCallFunctionEnabled: true
+endCallMessage: Goodbye.
+firstMessage: Ho, ho, ho! Merry Christmas! Oh, how lovely... a call all the way to the North Pole. I was just having some cocoa by the fire. Now then... who do I have the pleasure of speaking with?
+model:
+  model: gpt-4.1-nano
+  provider: openai
+transcriber:
+  language: en
+  model: scribe_v1
+  provider: 11labs
+voice:
+  autoMode: true
+  model: eleven_turbo_v2_5
+  optimizeStreamingLatency: 3
+  provider: 11labs
+  similarityBoost: 0.75
+  speed: 1
+  stability: 0.5
+  style: 0.3
+  useSpeakerBoost: true
+  voiceId: Gqe8GJJLg3haJkTwYj2L
+voicemailMessage: Please call back when you're available.
 ---
 
 [Identity]  

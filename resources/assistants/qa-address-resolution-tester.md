@@ -1,43 +1,43 @@
 ---
 name: QA - Address Resolution Tester
-voice:
-  model: eleven_turbo_v2
-  speed: 1
-  voiceId: NHRgOEwqx5WZNClv5sat
-  provider: 11labs
-  stability: 0.8
-  similarityBoost: 0.75
-  enableSsmlParsing: true
+backgroundDenoisingEnabled: true
+backgroundSound: off
+endCallFunctionEnabled: true
+endCallMessage: Address verification complete. Goodbye!
+firstMessage: Hi, I'm the address verification assistant. What's the property address you'd like me to look up?
+maxDurationSeconds: 300
+messagePlan:
+  idleMessageMaxSpokenCount: 2
+  idleMessages:
+    - Are you still there?
+  idleTimeoutSeconds: 15
 model:
   model: gpt-4.1
+  provider: openai
+  temperature: 0
   toolIds:
     - resource-254951d0
     - resource-8102e715
-  provider: openai
-  temperature: 0
-firstMessage: Hi, I'm the address verification assistant. What's the property address you'd like me to look up?
-endCallFunctionEnabled: true
-endCallMessage: Address verification complete. Goodbye!
-transcriber:
-  model: nova-3
-  language: en
-  numerals: true
-  provider: deepgram
-silenceTimeoutSeconds: 30
-maxDurationSeconds: 300
-backgroundSound: off
-backgroundDenoisingEnabled: true
-messagePlan:
-  idleMessages:
-    - Are you still there?
-  idleMessageMaxSpokenCount: 2
-  idleTimeoutSeconds: 15
 observabilityPlan:
+  provider: langfuse
   tags:
     - Roofr
     - Test
     - AddressResolution
-  provider: langfuse
+silenceTimeoutSeconds: 30
+transcriber:
+  language: en
+  model: nova-3
+  numerals: true
+  provider: deepgram
+voice:
+  enableSsmlParsing: true
+  model: eleven_turbo_v2
+  provider: 11labs
+  similarityBoost: 0.75
+  speed: 1
+  stability: 0.8
+  voiceId: NHRgOEwqx5WZNClv5sat
 ---
 
 # Purpose

@@ -1,29 +1,29 @@
 ---
 name: QA - Get Estimate Test
-voice:
-  model: eleven_turbo_v2
-  speed: 1.1
-  voiceId: NHRgOEwqx5WZNClv5sat
-  provider: 11labs
-  stability: 0.7
-  similarityBoost: 0.75
-  enableSsmlParsing: true
+backgroundSound: off
+endCallMessage: Test complete. Goodbye!
+firstMessage: Hi! I'm the Get Estimate tool test assistant. Would you like me to run the get_estimate tool test now?
+maxDurationSeconds: 300
 model:
   model: gpt-4.1
-  toolIds:
-    - resource-d9b622dd
   provider: openai
   temperature: 0
-firstMessage: Hi! I'm the Get Estimate tool test assistant. Would you like me to run the get_estimate tool test now?
-endCallMessage: Test complete. Goodbye!
+  toolIds:
+    - resource-d9b622dd
+silenceTimeoutSeconds: 30
 transcriber:
-  model: nova-3
   language: en
+  model: nova-3
   numerals: true
   provider: deepgram
-silenceTimeoutSeconds: 30
-maxDurationSeconds: 300
-backgroundSound: off
+voice:
+  enableSsmlParsing: true
+  model: eleven_turbo_v2
+  provider: 11labs
+  similarityBoost: 0.75
+  speed: 1.1
+  stability: 0.7
+  voiceId: NHRgOEwqx5WZNClv5sat
 ---
 
 # Get Estimate Tool Test Assistant

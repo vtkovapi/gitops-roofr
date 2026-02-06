@@ -1,28 +1,28 @@
 ---
 name: QA - Human Transfer Receiver
-voice:
-  model: eleven_turbo_v2
-  speed: 1.1
-  voiceId: sarah
-  provider: 11labs
-  stability: 0.6
-  similarityBoost: 0.75
+backgroundSound: off
+compliancePlan:
+  pciEnabled: false
+endCallFunctionEnabled: true
+endCallMessage: Thanks for calling. Have a great day!
+firstMessage: Hi, this is Sarah from EverBlue. How can I help you?
+maxDurationSeconds: 300
 model:
   model: gpt-4.1
   provider: openai
   temperature: 0.3
-firstMessage: Hi, this is Sarah from EverBlue. How can I help you?
-endCallFunctionEnabled: true
-endCallMessage: Thanks for calling. Have a great day!
-transcriber:
-  model: nova-3
-  language: en
-  provider: deepgram
 silenceTimeoutSeconds: 30
-maxDurationSeconds: 300
-backgroundSound: off
-compliancePlan:
-  pciEnabled: false
+transcriber:
+  language: en
+  model: nova-3
+  provider: deepgram
+voice:
+  model: eleven_turbo_v2
+  provider: 11labs
+  similarityBoost: 0.75
+  speed: 1.1
+  stability: 0.6
+  voiceId: sarah
 ---
 
 # Identity
