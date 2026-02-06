@@ -8,7 +8,7 @@ Manage Vapi resources via Git using YAML/Markdown as the source-of-truth.
 |---|---|---|
 | **History** | Limited visibility of who changed what | Full git history with blame |
 | **Review** | Changes go live immediately (can break things) | PR review before deploy |
-| **Rollback** | Manual recreation | `git revert` + apply |
+| **Rollback** | Manual recreation | `git revert` + push |
 | **Environments** | Tedious to copy-paste between envs | Same config, different state files |
 | **Collaboration** | One person at a time. Need to duplicate assistants, tools, etc. | Team can collaborate and use git branching |
 | **Reproducibility** | "It worked on my assistant!" | Declarative, version-controlled |
@@ -19,7 +19,7 @@ Manage Vapi resources via Git using YAML/Markdown as the source-of-truth.
 - **Audit Trail** — Every change is a commit with author, timestamp, and reason
 - **Code Review** — Catch misconfigurations before they hit production
 - **Environment Parity** — Dev, staging, and prod stay in sync
-- **No Drift** — Git is the truth; manual console changes get overwritten
+- **No Drift** — Pull merges platform changes; push makes git the truth
 - **Automation Ready** — Plug into CI/CD pipelines
 
 ### Supported Resources
@@ -62,62 +62,101 @@ echo "VAPI_TOKEN=your-token-here" > .env.dev
 | Command | Description |
 |---------|-------------|
 | `npm run build` | Type-check the codebase |
-| `npm run pull:dev` | Pull resources from Vapi to local files |
-| `npm run pull:prod` | Pull resources from prod |
-| `npm run apply:dev` | Push all local files to Vapi (dev) |
-| `npm run apply:prod` | Push all local files to Vapi (prod) |
-| `npm run apply:dev assistants` | Push only assistants (dev) |
-| `npm run apply:dev tools` | Push only tools (dev) |
+| `npm run pull:dev` | Pull platform state, merge with local changes |
+| `npm run pull:prod` | Pull from prod, merge with local changes |
+| `npm run push:dev` | Push local files to Vapi (dev) |
+| `npm run push:prod` | Push local files to Vapi (prod) |
+| `npm run apply:dev` | Pull → Merge → Push in one shot (dev) |
+| `npm run apply:prod` | Pull → Merge → Push in one shot (prod) |
+| `npm run push:dev assistants` | Push only assistants (dev) |
+| `npm run push:dev tools` | Push only tools (dev) |
 | `npm run call:dev -- -a <name>` | Start a WebSocket call to an assistant (dev) |
 | `npm run call:dev -- -s <name>` | Start a WebSocket call to a squad (dev) |
 
 ### Basic Workflow
 
 ```bash
-# Pull existing resources from Vapi
+# First time: pull existing resources from Vapi
 npm run pull:dev
+
+# Commit the initial state
+git add . && git commit -m "initial pull"
 
 # Make changes to YAML/MD files...
 
-# Push changes back to Vapi
+# Safe sync: pull latest platform changes, merge, push
 npm run apply:dev
 ```
 
-### Selective Apply (Partial Sync)
+#### Pull → Edit → Push (manual two-step)
+
+If you want more control over each step:
+
+```bash
+# Pull platform state (auto-merges with your local changes via git stash/pop)
+npm run pull:dev
+
+# Review the merged result, make further edits...
+
+# Push to platform
+npm run push:dev
+```
+
+#### Handling Merge Conflicts
+
+If platform changes conflict with your local edits, `pull` will leave standard git conflict markers in the affected files and exit:
+
+```bash
+npm run pull:dev
+# ⚠️  Merge conflicts detected!
+
+# See which files have conflicts
+git diff --name-only --diff-filter=U
+
+# Edit files to resolve conflicts (remove <<<< ==== >>>> markers)
+
+# Push resolved state
+npm run push:dev
+
+# Clean up the stash
+git stash drop
+```
+
+### Selective Push (Partial Sync)
 
 Push only specific resources instead of syncing everything:
 
 #### By Resource Type
 
 ```bash
-npm run apply:dev assistants
-npm run apply:dev tools
-npm run apply:dev squads
-npm run apply:dev structuredOutputs
-npm run apply:dev personalities
-npm run apply:dev scenarios
-npm run apply:dev simulations
-npm run apply:dev simulationSuites
+npm run push:dev assistants
+npm run push:dev tools
+npm run push:dev squads
+npm run push:dev structuredOutputs
+npm run push:dev personalities
+npm run push:dev scenarios
+npm run push:dev simulations
+npm run push:dev simulationSuites
 ```
 
 #### By Specific File(s)
 
 ```bash
 # Push a single file
-npm run apply:dev resources/assistants/my-assistant.md
+npm run push:dev resources/assistants/my-assistant.md
 
 # Push multiple files
-npm run apply:dev resources/assistants/booking.md resources/tools/my-tool.yml
+npm run push:dev resources/assistants/booking.md resources/tools/my-tool.yml
 ```
 
 #### Combined
 
 ```bash
 # Push specific file within a type
-npm run apply:dev assistants resources/assistants/booking.md
+npm run push:dev assistants resources/assistants/booking.md
 ```
 
-**Note:** Partial applies skip deletion checks. Run full `npm run apply:dev` to sync deletions.
+**Note:** Partial pushes skip deletion checks. Run full `npm run push:dev` to sync deletions.
 
 ---
 
@@ -126,8 +165,9 @@ npm run apply:dev assistants resources/assistants/booking.md
 ```
 vapi-gitops/
 ├── src/
-│   ├── apply.ts                # Apply entry point & functions
-│   ├── pull.ts                 # Pull entry point & functions
+│   ├── pull.ts                 # Pull platform state (with git stash/pop merge)
+│   ├── push.ts                 # Push local state to platform
+│   ├── apply.ts                # Orchestrator: pull → merge → push
 │   ├── call.ts                 # WebSocket call script
 │   ├── types.ts                # TypeScript interfaces
 │   ├── config.ts               # Environment & configuration
@@ -333,10 +373,10 @@ model:
   provider: openai
 ```
 
-Then apply:
+Then push:
 
 ```bash
-npm run apply:dev
+npm run push:dev
 ```
 
 ### How to Add a Tool
@@ -390,7 +430,7 @@ scenarioId: happy-path           # → resources/simulations/scenarios/happy-pat
 
 1. **Remove references** to the resource from other files
 2. **Delete the file**: `rm resources/tools/my-tool.yml`
-3. **Apply**: `npm run apply:dev`
+3. **Push**: `npm run push:dev`
 
 The engine will:
 - Detect the resource is in state but not in filesystem
@@ -429,6 +469,33 @@ model:
 
 ## How the Engine Works
 
+### Sync Workflow
+
+The engine uses git's merge capabilities to safely combine local and platform changes:
+
+```
+┌─────────┐     ┌──────────┐     ┌──────────┐
+│  pull    │ ──▸ │  merge   │ ──▸ │  push    │
+│ platform │     │ (git     │     │ to       │
+│ state    │     │  stash/  │     │ platform │
+│          │     │  pop)    │     │          │
+└─────────┘     └──────────┘     └──────────┘
+```
+
+**`pull`** does the heavy lifting:
+1. Detects local uncommitted changes → `git stash`
+2. Downloads fresh platform state (overwrites resource files)
+3. Reapplies local changes on top → `git stash pop`
+4. Git's three-way merge reconciles both sets of changes
+5. If conflicts: leaves standard `<<<<<<<` markers, exits for manual resolution
+6. If clean: working tree has merged files ready to push
+
+**`push`** is the engine — reads local files and syncs them to the platform.
+
+**`apply`** is the convenience wrapper — runs `pull` then `push` in sequence. Stops if pull has conflicts.
+
+> **Note:** `pull` requires a git repo with at least one commit. Without git, it falls back to a simple overwrite (no merge support).
+
 ### Processing Order
 
 **Pull** (dependency order):
@@ -441,7 +508,7 @@ model:
 7. Simulations
 8. Simulation Suites
 
-**Apply** (dependency order):
+**Push** (dependency order):
 1. Tools → 2. Structured Outputs → 3. Assistants → 4. Squads
 5. Personalities → 6. Scenarios → 7. Simulations → 8. Simulation Suites
 
@@ -519,7 +586,7 @@ The referenced resource doesn't exist. Check:
 
 1. Find which resources reference it (shown in error)
 2. Remove the references
-3. Apply again
+3. Push again
 4. Then delete the resource file
 
 ### Resource not updating
@@ -527,7 +594,7 @@ The referenced resource doesn't exist. Check:
 Check the state file has correct UUID:
 1. Open `.vapi-state.{env}.json`
 2. Find the resource entry
-3. If incorrect, delete entry and re-run apply
+3. If incorrect, delete entry and re-run push
 
 ### "property X should not exist" API errors
 
