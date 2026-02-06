@@ -1,7 +1,8 @@
+import { execSync } from "child_process";
 import { mkdir, writeFile } from "fs/promises";
 import { join, dirname } from "path";
 import { stringify } from "yaml";
-import { VAPI_ENV, VAPI_BASE_URL, VAPI_TOKEN, RESOURCES_DIR } from "./config.ts";
+import { VAPI_ENV, VAPI_BASE_URL, VAPI_TOKEN, RESOURCES_DIR, BASE_DIR } from "./config.ts";
 import { loadState, saveState } from "./state.ts";
 import type { StateFile, ResourceType } from "./types.ts";
 
@@ -28,10 +29,6 @@ const EXCLUDED_FIELDS = [
   "workflowIds",           // Server-managed: workflows are a separate resource type
 ];
 
-// ─────────────────────────────────────────────────────────────────────────────
-// API Functions
-// ─────────────────────────────────────────────────────────────────────────────
-
 // Map resource types to their API endpoints
 const ENDPOINT_MAP: Record<ResourceType, string> = {
   tools: "/tool",
@@ -55,6 +52,34 @@ const FOLDER_MAP: Record<ResourceType, string> = {
   simulations: "simulations/tests",
   simulationSuites: "simulations/suites",
 };
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Git Helpers (merge support — stash local changes before pull, reapply after)
+// ─────────────────────────────────────────────────────────────────────────────
+
+function gitCmd(args: string): string {
+  return execSync(`git ${args}`, {
+    cwd: BASE_DIR,
+    encoding: "utf-8",
+    stdio: ["pipe", "pipe", "pipe"],
+  }).trim();
+}
+
+function isGitRepo(): boolean {
+  try { gitCmd("rev-parse --is-inside-work-tree"); return true; } catch { return false; }
+}
+
+function gitHasCommits(): boolean {
+  try { gitCmd("rev-parse HEAD"); return true; } catch { return false; }
+}
+
+function gitHasChanges(): boolean {
+  return gitCmd("status --porcelain").length > 0;
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// API Functions
+// ─────────────────────────────────────────────────────────────────────────────
 
 export async function fetchAllResources(resourceType: ResourceType): Promise<VapiResource[]> {
   const endpoint = ENDPOINT_MAP[resourceType];
@@ -347,14 +372,14 @@ export async function pullResourceType(
   }
   
   console.log(`   Found ${resources.length} ${resourceType} in Vapi`);
-  
+
   const reverseMap = buildReverseMap(state, resourceType);
   const existingIds = new Set(Object.keys(state[resourceType]));
   const newStateSection: Record<string, string> = {};
-  
+
   let created = 0;
   let updated = 0;
-  
+
   for (const resource of resources) {
     // Check if we already have this resource in state (by UUID)
     let resourceId = reverseMap.get(resource.id);
@@ -369,13 +394,22 @@ export async function pullResourceType(
       updated++;
     }
     
+    // Detect platform defaults (orgId is null/missing — read-only, immutable)
+    const isPlatformDefault = resource.orgId === null || resource.orgId === undefined;
+
     // Clean and resolve references
     const cleaned = cleanResource(resource);
     const resolved = resolveReferencesToResourceIds(cleaned, state);
+
+    // Mark platform defaults so apply skips them
+    if (isPlatformDefault) {
+      resolved._platformDefault = true;
+    }
     
     // Write to file
     const filePath = await writeResourceFile(resourceType, resourceId, resolved);
-    console.log(`   ${isNew ? "✨" : "📝"} ${resourceId} -> ${filePath}`);
+    const icon = isPlatformDefault ? "🔒" : isNew ? "✨" : "📝";
+    console.log(`   ${icon} ${resourceId} -> ${filePath}${isPlatformDefault ? " (platform default, read-only)" : ""}`);
     
     // Update state
     newStateSection[resourceId] = resource.id;
@@ -397,6 +431,18 @@ async function main(): Promise<void> {
   console.log(`   API: ${VAPI_BASE_URL}`);
   console.log("═══════════════════════════════════════════════════════════════");
 
+  // Git merge support: stash local changes before overwriting with platform state
+  const gitEnabled = isGitRepo() && gitHasCommits();
+  const hadLocalChanges = gitEnabled && gitHasChanges();
+
+  if (hadLocalChanges) {
+    console.log("\n📦 Stashing local changes before pull...");
+    gitCmd('stash push -m "gitops: stash before pull"');
+    console.log("   ✅ Local changes stashed\n");
+  } else if (gitEnabled) {
+    console.log("\n📦 No local changes to stash\n");
+  }
+
   const state = loadState();
 
   const stats: Record<string, PullStats> = {
@@ -410,14 +456,7 @@ async function main(): Promise<void> {
     simulationSuites: { created: 0, updated: 0 },
   };
 
-  // Pull in dependency order:
-  // 1. Base resources (tools, structuredOutputs)
-  // 2. Assistants (references tools, structuredOutputs)
-  // 3. Squads (references assistants)
-  // 4. Simulation building blocks (personalities, scenarios - no cross-dependencies)
-  // 5. Simulations (references personalities, scenarios)
-  // 6. Simulation suites (references simulations)
-  
+  // Pull in dependency order
   stats.tools = await pullResourceType("tools", state);
   stats.structuredOutputs = await pullResourceType("structuredOutputs", state);
   stats.assistants = await pullResourceType("assistants", state);
@@ -427,8 +466,31 @@ async function main(): Promise<void> {
   stats.simulations = await pullResourceType("simulations", state);
   stats.simulationSuites = await pullResourceType("simulationSuites", state);
 
-  // Save updated state
+  // Reapply local changes on top of pulled platform state
+  let hasConflicts = false;
+  if (hadLocalChanges) {
+    console.log("\n📦 Reapplying local changes...");
+    try {
+      gitCmd("stash pop");
+      console.log("   ✅ Local changes merged cleanly\n");
+    } catch {
+      hasConflicts = true;
+    }
+  }
+
+  // Always save state last — overwrites any stash-induced changes to the state file
   await saveState(state);
+
+  if (hasConflicts) {
+    console.error("\n⚠️  Merge conflicts detected!");
+    console.error("   Platform changes conflict with your local changes.\n");
+    console.error("   To see conflicted files:");
+    console.error("     git diff --name-only --diff-filter=U\n");
+    console.error("   After resolving conflicts:");
+    console.error(`     npm run push:${VAPI_ENV}    # push to platform`);
+    console.error("     git stash drop              # clean up the stash\n");
+    process.exit(1);
+  }
 
   // Summary
   console.log("\n═══════════════════════════════════════════════════════════════");
