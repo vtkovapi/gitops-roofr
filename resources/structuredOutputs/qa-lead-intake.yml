@@ -1,6 +1,12 @@
 name: qa_lead_intake
-type: ai
+assistant_ids:
+  - everblue-main-agent
+  - everblue-estimate-agent
 description: Determine how much contact information was collected during the call
+model:
+  model: gpt-4.1-mini
+  provider: openai
+  temperature: 0
 schema:
   enum:
     - complete
@@ -9,11 +15,5 @@ schema:
     - name_only
     - not_started
   type: string
-model:
-  model: gpt-4.1-mini
-  provider: openai
-  temperature: 0
 target: messages
-assistant_ids:
-  - everblue-main-agent
-  - everblue-estimate-agent
+type: ai

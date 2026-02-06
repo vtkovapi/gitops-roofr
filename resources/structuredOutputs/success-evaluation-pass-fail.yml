@@ -1,17 +1,17 @@
 name: success_evaluation
-type: ai
+assistant_ids:
+  - everblue-main-agent
+  - everblue-estimate-agent
 description: Binary success evaluation determining if the call met its objectives
-schema:
-  type: boolean
-  description: |-
-    You are an expert call evaluator. Analyze the call transcript and determine if it was successful based on the objectives inferred from the system prompt.
-
-    Return true if the call successfully met its objectives, false if it did not.
 model:
   model: gpt-4.1-mini
   provider: openai
   temperature: 0
+schema:
+  description: |-
+    You are an expert call evaluator. Analyze the call transcript and determine if it was successful based on the objectives inferred from the system prompt.
+
+    Return true if the call successfully met its objectives, false if it did not.
+  type: boolean
 target: messages
-assistant_ids:
-  - everblue-main-agent
-  - everblue-estimate-agent
+type: ai

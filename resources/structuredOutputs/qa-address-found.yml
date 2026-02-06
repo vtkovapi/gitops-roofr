@@ -1,13 +1,13 @@
 name: qa_address_found
-type: ai
+assistant_ids:
+  - everblue-main-agent
+  - everblue-estimate-agent
 description: Check if the address has been successfully found by the assistant during the call
+model:
+  model: gpt-4.1-mini
+  provider: openai
+  temperature: 0
 schema:
-  enum:
-    - address_found
-    - no_result
-    - error
-    - not_reached
-  type: string
   description: |-
     Evaluates the outcome of the address resolution step during the call. Analyze the resolve_address tool calls and their results:
 
@@ -15,11 +15,11 @@ schema:
     - no_result: No matches found after max retries (transfer)
     - error: System/API error occurred (transfer)
     - not_reached: Address step never happened during the call
-model:
-  model: gpt-4.1-mini
-  provider: openai
-  temperature: 0
+  enum:
+    - address_found
+    - no_result
+    - error
+    - not_reached
+  type: string
 target: messages
-assistant_ids:
-  - everblue-main-agent
-  - everblue-estimate-agent
+type: ai

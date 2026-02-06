@@ -1,16 +1,13 @@
 name: transfer_call
-type: ai
+assistant_ids:
+  - everblue-main-agent
+  - everblue-estimate-agent
 description: Determine if and why the call was transferred to a human
+model:
+  model: gpt-4.1-mini
+  provider: openai
+  temperature: 0
 schema:
-  enum:
-    - existing_project
-    - commercial_property
-    - address_unresolved
-    - estimate_failed
-    - caller_requested
-    - system_error
-    - not_transferred
-  type: string
   description: |-
     Analyze the call transcript to determine if the call was transferred and why.
 
@@ -28,11 +25,14 @@ schema:
     - not_transferred — Call was NOT transferred to a human
 
     Look for: transfer_call tool invocation, phrases like "Let me connect you", "I'll transfer you", and the reason stated before transfer.
-model:
-  model: gpt-4.1-mini
-  provider: openai
-  temperature: 0
+  enum:
+    - existing_project
+    - commercial_property
+    - address_unresolved
+    - estimate_failed
+    - caller_requested
+    - system_error
+    - not_transferred
+  type: string
 target: messages
-assistant_ids:
-  - everblue-main-agent
-  - everblue-estimate-agent
+type: ai

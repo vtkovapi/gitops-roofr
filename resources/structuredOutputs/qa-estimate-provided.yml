@@ -1,6 +1,12 @@
 name: qa_estimate_provided
-type: ai
+assistant_ids:
+  - everblue-main-agent
+  - everblue-estimate-agent
 description: Determine the outcome of the estimate flow
+model:
+  model: gpt-4.1-mini
+  provider: openai
+  temperature: 0
 schema:
   enum:
     - provided
@@ -10,11 +16,5 @@ schema:
     - api_failed
     - not_reached
   type: string
-model:
-  model: gpt-4.1-mini
-  provider: openai
-  temperature: 0
 target: messages
-assistant_ids:
-  - everblue-main-agent
-  - everblue-estimate-agent
+type: ai
