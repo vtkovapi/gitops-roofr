@@ -1,7 +1,6 @@
-type: function
+async: false
 function:
   name: get_estimate
-  strict: true
   description: |-
     Get an instant roofing estimate for a property. Also stores the lead in Roofr.
 
@@ -13,74 +12,75 @@ function:
     Returns estimate ranges for different material options.
     For flat roofs or unsupported materials, estimate may not be available.
   parameters:
-    type: object
     properties:
-      slope:
-        description: Roof slope/pitch as described by caller
-        type: string
-        enum:
-          - flat
-          - low
-          - steep
-          - moderate
-        default: ""
-      timeline:
-        description: Project timeline urgency
-        type: string
-        enum:
-          - urgent
-          - soon
-          - none
-        default: ""
       addressUuid:
+        default: ""
         description: The Roofr addressId obtained from resolve_address tool
         type: number
+      allowHomeownerSms:
         default: ""
+        description: "Whether caller consented to receive SMS messages. "
+        type: boolean
+      contactEmail:
+        description: Caller's email address for sending estimate details (optional)
+        type: string
       contactName:
         description: Caller's name
         type: string
+      contactPhone:
+        default: ""
+        description: Caller's phone number for follow-up, must include + prefix (e.g., +15101234567 not 5101234567)
+        type: string
+      propertyType:
+        description: Type of property
+        enum:
+          - residential
+          - commercial
+        type: string
       shingleType:
+        default: ""
         description: |-
           Preferred shingle/material type (e.g., "asphalt", "metal", "tile", "slate")
           Use "asphalt" if nothing is provided
-        type: string
         enum:
           - asphalt
           - metal
           - tile
           - slate
+        type: string
+      slope:
         default: ""
-      contactEmail:
-        description: Caller's email address for sending estimate details (optional)
-        type: string
-      contactPhone:
-        description: Caller's phone number for follow-up, must include + prefix (e.g., +15101234567 not 5101234567)
-        type: string
-        default: ""
-      propertyType:
-        description: Type of property
-        type: string
+        description: Roof slope/pitch as described by caller
         enum:
-          - residential
-          - commercial
-      allowHomeownerSms:
-        description: "Whether caller consented to receive SMS messages. "
-        type: boolean
+          - flat
+          - low
+          - steep
+          - moderate
+        type: string
+      timeline:
         default: ""
+        description: Project timeline urgency
+        enum:
+          - urgent
+          - soon
+          - none
+        type: string
     required:
       - addressUuid
       - contactPhone
       - contactName
       - propertyType
+    type: object
+  strict: true
 messages:
-  - type: request-start
+  - blocking: true
     content: Let me pull up your estimate now. This will just take a moment.
-    blocking: true
-  - type: request-response-delayed
-    content: Still calculating your estimate.
+    type: request-start
+  - content: Still calculating your estimate.
     timingMilliseconds: 10000
+    type: request-response-delayed
 server:
-  url: https://app-v2.roofr-staging.com/api/v1/voice-lead/vapi/webhook/03e5c715-5ea0-46a1-a69e-3f4a01f85eb5
-  timeoutSeconds: 20
   credentialId: 2f6db611-ad08-4099-8bd8-74db37b0a07e
-async: false
+  timeoutSeconds: 20
+  url: https://ceramic-drip-3744.preview.roofr-dev.com/api/v1/voice-lead/vapi/webhook/7e05bc70-6621-459d-aded-030228c0d340
+type: function

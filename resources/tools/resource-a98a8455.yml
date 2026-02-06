@@ -1,16 +1,16 @@
-type: transferCall
+async: false
+destinations:
+  - message: Please hold while I transfer you.
+    number: "+15102408008"
+    numberE164CheckEnabled: true
+    transferPlan:
+      mode: blind-transfer
+      sipVerb: refer
+    type: number
 function:
   name: transfer_call
   description: Transfer the caller to a human agent when needed
 messages:
-  - type: request-start
-    blocking: false
-async: false
-destinations:
-  - type: number
-    number: "+15102408008"
-    message: Please hold while I transfer you.
-    transferPlan:
-      mode: blind-transfer
-      sipVerb: refer
-    numberE164CheckEnabled: true
+  - blocking: false
+    type: request-start
+type: transferCall
