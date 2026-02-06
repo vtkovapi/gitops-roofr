@@ -76,8 +76,8 @@ membersOverrides:
           exact: I'm sorry, I didn't quite catch that. Could you please repeat?
       on: assistant.transcriber.endpointedSpeechLowConfidence
       options:
-        confidenceMin: 0.2
         confidenceMax: 0.49
+        confidenceMin: 0.2
     - do:
         - type: say
           exact: I'll be ending the call now. Please feel free to call back anytime. Have a great day!
