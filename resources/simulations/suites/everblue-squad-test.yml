@@ -1,3 +1,4 @@
+name: Everblue Squad Test
 simulationIds:
   - squad-case-1
   - squad-case-2
@@ -8,4 +9,3 @@ simulationIds:
   - squad-case-7
   - squad-case-8
   - squad-case-9
-name: Everblue Squad Test

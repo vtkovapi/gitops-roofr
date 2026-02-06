@@ -1,3 +1,4 @@
+name: Address Resolution
 simulationIds:
   - address-scenario-1
   - address-scenario-2
@@ -8,4 +9,3 @@ simulationIds:
   - address-scenario-7
   - address-scenario-8
   - address-scenario-9
-name: Address Resolution

@@ -1,3 +1,4 @@
+name: Estimate Test
 simulationIds:
   - estimate-case-1
   - estimate-case-2
@@ -5,4 +6,3 @@ simulationIds:
   - estimate-case-4
   - estimate-case-5
   - estimate-case-6
-name: Estimate Test
