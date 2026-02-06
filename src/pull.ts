@@ -1,6 +1,6 @@
 import { execSync } from "child_process";
 import { mkdir, writeFile } from "fs/promises";
-import { join, dirname } from "path";
+import { join, dirname, relative } from "path";
 import { stringify } from "yaml";
 import { VAPI_ENV, VAPI_BASE_URL, VAPI_TOKEN, RESOURCES_DIR, BASE_DIR } from "./config.ts";
 import { loadState, saveState } from "./state.ts";
@@ -119,10 +119,18 @@ function slugify(name: string): string {
     .replace(/-+/g, "-");
 }
 
+function extractName(resource: VapiResource): string | undefined {
+  if (resource.name) return resource.name;
+  // Tools store their name under function.name
+  const fn = resource.function as Record<string, unknown> | undefined;
+  if (fn?.name && typeof fn.name === "string") return fn.name;
+  return undefined;
+}
+
 function generateResourceId(resource: VapiResource, existingIds: Set<string>): string {
-  // Use name if available, otherwise use type + short id
-  const baseName = resource.name 
-    ? slugify(resource.name)
+  const name = extractName(resource);
+  const baseName = name
+    ? slugify(name)
     : `resource-${resource.id.slice(0, 8)}`;
   
   let resourceId = baseName;
@@ -304,6 +312,23 @@ function extractSystemPrompt(data: Record<string, unknown>): { systemPrompt: str
   return { systemPrompt: systemMessage.content, cleanedData };
 }
 
+// Deterministic key ordering: 'name' first, then alphabetical
+// Applied to all levels (top-level and nested objects) for stable diffs
+const sortMapEntries = (a: { key: unknown }, b: { key: unknown }): number => {
+  const aKey = String(a.key);
+  const bKey = String(b.key);
+  if (aKey === "name") return -1;
+  if (bKey === "name") return 1;
+  return aKey.localeCompare(bKey);
+};
+
+const YAML_OPTIONS = {
+  lineWidth: 0,
+  defaultStringType: "PLAIN" as const,
+  defaultKeyType: "PLAIN" as const,
+  sortMapEntries,
+};
+
 async function writeResourceFile(
   resourceType: ResourceType,
   resourceId: string,
@@ -321,11 +346,7 @@ async function writeResourceFile(
       const filePath = join(dir, `${resourceId}.md`);
       await mkdir(dirname(filePath), { recursive: true });
       
-      const yamlContent = stringify(cleanedData, {
-        lineWidth: 0,
-        defaultStringType: "PLAIN",
-        defaultKeyType: "PLAIN",
-      });
+      const yamlContent = stringify(cleanedData, YAML_OPTIONS);
       
       const mdContent = `---\n${yamlContent}---\n\n${systemPrompt}\n`;
       await writeFile(filePath, mdContent);
@@ -338,11 +359,7 @@ async function writeResourceFile(
   const filePath = join(dir, `${resourceId}.yml`);
   await mkdir(dirname(filePath), { recursive: true });
   
-  const yamlContent = stringify(data, {
-    lineWidth: 0,
-    defaultStringType: "PLAIN",
-    defaultKeyType: "PLAIN",
-  });
+  const yamlContent = stringify(data, YAML_OPTIONS);
   
   await writeFile(filePath, yamlContent);
   
@@ -409,7 +426,8 @@ export async function pullResourceType(
     // Write to file
     const filePath = await writeResourceFile(resourceType, resourceId, resolved);
     const icon = isPlatformDefault ? "🔒" : isNew ? "✨" : "📝";
-    console.log(`   ${icon} ${resourceId} -> ${filePath}${isPlatformDefault ? " (platform default, read-only)" : ""}`);
+    const relPath = relative(BASE_DIR, filePath);
+    console.log(`   ${icon} ${resourceId} -> ${relPath}${isPlatformDefault ? " (platform default, read-only)" : ""}`);
     
     // Update state
     newStateSection[resourceId] = resource.id;
